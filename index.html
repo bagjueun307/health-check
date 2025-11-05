@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>건강검진 결과 보안 프로그램</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Malgun Gothic', sans-serif;
+    background: black;
+    color: #00ff99;
+    overflow-x: hidden;
+    overflow-y: auto;
+    text-align: center;
+    min-height: 100vh;
+  }
+
+  canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    background: black;
+    transition: opacity 2s ease;
+  }
+
+  #intro {
+    font-size: 1.3rem;
+    color: #00ff99;
+    text-shadow: 0 0 10px #00ff99;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .container {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 800px;
+    margin: 40px auto;
+    border: 2px solid #00a000;
+    box-shadow: 0 0 18px #00e000;
+    display: none;
+  }
+
+  h1, p {
+    text-shadow: 0 0 5px #00ff99;
+    margin: 10px 0;
+  }
+
+  #instruction {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #00ff99;
+    display: none;
+    text-shadow: 0 0 10px #00ff99;
+    animation: blink 1.5s infinite alternate;
+  }
+  @keyframes blink {
+    from { opacity: 1; }
+    to { opacity: 0.6; }
+  }
+
+  #sudokuGrid {
+    margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    width: min(90vw, 380px);
+    aspect-ratio: 1/1;
+    border: 3px solid #00ff99;
+    box-sizing: border-box;
+  }
+
+  .cell {
+    border: 1px solid #007000;
+    font-weight: bold;
+    font-size: clamp(14px, 2.5vw, 20px);
+    color: #00e000;
+    background-color: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.4s, box-shadow 0.4s;
+    box-sizing: border-box;
+  }
+
+  .cell input {
+    width: 100%; height: 100%;
+    font-size: clamp(14px, 3vw, 20px);
+    text-align: center;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #00ff99;
+  }
+
+  /* 3x3 경계선 */
+  .cell:nth-child(9n+1) { border-left: 2px solid #00ff99; }
+  .cell:nth-child(-n+9) { border-top: 2px solid #00ff99; }
+  .cell:nth-child(9n) { border-right: 2px solid #00ff99; }
+  .cell:nth-child(n+73) { border-bottom: 2px solid #00ff99; }
+  .cell:nth-child(n+19):nth-child(-n+27),
+  .cell:nth-child(n+46):nth-child(-n+54) {
+    border-bottom: 2px solid #00ff99;
+  }
+
+  .prefilled { color: #00aa00; }
+
+  .correct-block {
+    background-color: rgba(0,255,100,0.15) !important;
+    box-shadow: 0 0 10px #00ff99 inset;
+  }
+
+  .correct-cell {
+    background-color: rgba(0,255,150,0.35) !important;
+    box-shadow: 0 0 15px #00ff99 inset;
+  }
+
+  .wrong {
+    color: #ff4444 !important;
+    text-shadow: 0 0 8px #ff0000;
+  }
+
+  #message {
+    min-height: 20px;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  #codeSection {
+    display: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  #codeSection.show {
+    display: block;
+    opacity: 1;
+  }
+
+  #codeInput {
+    width: 150px;
+    padding: 8px;
+    margin-top: 10px;
+    font-size: 18px;
+    text-align: center;
+    border: 2px solid #00a000;
+    border-radius: 5px;
+    background-color: #000;
+    color: #00ff99;
+    box-shadow: 0 0 10px #00e000;
+  }
+
+  #verifyBtn {
+    display: block;
+    margin: 10px auto 0;
+    font-size: 18px;
+    padding: 7px 15px;
+    cursor: pointer;
+    background: #008000;
+    color: white;
+    border: 1px solid #00a000;
+    border-radius: 5px;
+    box-shadow: 0 0 10px #00e000;
+  }
+
+  #verifyBtn:hover { background: #00c000; }
+
+  #imagesSection {
+    margin-top: 30px;
+    display: none;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  #imagesSection img {
+    width: 45%;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #00ff99;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+  #imagesSection img:hover {
+    transform: scale(1.05);
+  }
+
+  /* ✅ 오버레이 (확대 보기용) */
+  #overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95);
+    justify-content: center; align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+  }
+
+  #overlay img {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #00ff99;
+  }
+
+  #closeOverlay {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #00ff99;
+    cursor: pointer;
+    text-shadow: 0 0 10px #00ff99;
+  }
+
+  @media (max-width: 480px) {
+    #sudokuGrid { width: 95vw; max-width: 360px; }
+    .container { padding: 15px; margin: 20px auto; }
+    #imagesSection img { width: 90%; }
+    #overlay img { max-width: 95vw; max-height: 75vh; }
+  }
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div id="intro">온라인 건강 검진 결과 조회 보안 프로그램</div>
+
+<div class="container" id="main">
+  <h1>나염라님 환영합니다</h1>
+  <p id="instruction">검진 번호를 입력해주세요.</p>
+  <div id="sudokuGrid"></div>
+
+  <div id="codeSection">
+    <p id="message"></p>
+    <input type="text" id="codeInput" maxlength="4" placeholder="검진 번호 입력 (4자리)" />
+    <button id="verifyBtn">검진 번호 제출</button>
+  </div>
+</div>
+
+<div id="imagesSection">
+  <img src="https://raw.githubusercontent.com/parkjueun307/health-check/main/img1.jpg.png" alt="검진 결과 1">
+  <img src="https://raw.githubusercontent.com/parkjueun307/health-check/main/img2.jpg.png" alt="검진 결과 2">
+</div>
+
+<!-- ✅ 이미지 확대용 오버레이 -->
+<div id="overlay">
+  <span id="closeOverlay">✕</span>
+  <img src="" alt="확대이미지">
+</div>
+
+<script>
+// 기존 로직 유지
+let matrixRunning = true;
+setTimeout(() => {
+  document.getElementById("intro").style.display = "none";
+  document.getElementById("main").style.display = "block";
+  matrixRunning = false;
+  document.getElementById("matrix").style.opacity = "0";
+  document.getElementById("instruction").style.display = "block";
+}, 3000);
+
+const puzzle = [
+  [1,2,3,0,5,6,7,8,9],
+  [4,5,6,7,8,9,1,2,3],
+  [7,8,9,1,2,3,4,5,6],
+  [2,3,4,5,6,7,8,9,0],
+  [5,0,7,8,9,1,2,3,4],
+  [8,9,1,2,3,4,5,6,7],
+  [3,4,5,6,7,8,9,1,2],
+  [6,7,8,0,1,2,3,4,5],
+  [9,1,2,3,4,5,6,7,8]
+];
+const solution = [
+  [1,2,3,4,5,6,7,8,9],
+  [4,5,6,7,8,9,1,2,3],
+  [7,8,9,1,2,3,4,5,6],
+  [2,3,4,5,6,7,8,9,1],
+  [5,6,7,8,9,1,2,3,4],
+  [8,9,1,2,3,4,5,6,7],
+  [3,4,5,6,7,8,9,1,2],
+  [6,7,8,9,1,2,3,4,5],
+  [9,1,2,3,4,5,6,7,8]
+];
+
+const grid = document.getElementById("sudokuGrid");
+function renderSudoku(){
+  grid.innerHTML = "";
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const cell=document.createElement("div");
+      cell.className="cell";
+      if(puzzle[r][c]===0){
+        const input=document.createElement("input");
+        input.maxLength=1;
+        input.dataset.row=r;
+        input.dataset.col=c;
+        input.addEventListener("input", e=>{
+          const v=e.target.value;
+          const rr=+e.target.dataset.row, cc=+e.target.dataset.col;
+          const correct = (v == solution[rr][cc]);
+          const blockRow = Math.floor(rr/3)*3;
+          const blockCol = Math.floor(cc/3)*3;
+          const cells = document.querySelectorAll(".cell");
+
+          for(let i=blockRow;i<blockRow+3;i++){
+            for(let j=blockCol;j<blockCol+3;j++){
+              const index = i*9+j;
+              cells[index].classList.remove("correct-block");
+            }
+          }
+
+          if(correct){
+            for(let i=blockRow;i<blockRow+3;i++){
+              for(let j=blockCol;j<blockCol+3;j++){
+                const index = i*9+j;
+                cells[index].classList.add("correct-block");
+              }
+            }
+            e.target.parentElement.classList.add("correct-cell");
+            e.target.classList.remove("wrong");
+          } else {
+            e.target.parentElement.classList.remove("correct-cell");
+            e.target.classList.add("wrong");
+          }
+
+          const inputs=grid.querySelectorAll("input");
+          let allCorrect=true;
+          inputs.forEach(inp=>{
+            const r=+inp.dataset.row, c=+inp.dataset.col;
+            if(inp.value!=solution[r][c]) allCorrect=false;
+          });
+          if(allCorrect){
+            document.getElementById("instruction").style.display="none";
+            document.getElementById("codeSection").classList.add("show");
+          }
+        });
+        cell.appendChild(input);
+      } else {
+        cell.textContent=puzzle[r][c];
+        cell.classList.add("prefilled");
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+renderSudoku();
+
+// 기존 검증 로직 유지
+document.getElementById("verifyBtn").addEventListener("click",()=>{
+  const inputs=grid.querySelectorAll("input");
+  let correct=true;
+  inputs.forEach(inp=>{
+    const r=+inp.dataset.row, c=+inp.dataset.col;
+    if(inp.value!=solution[r][c]) correct=false;
+  });
+  const code=document.getElementById("codeInput").value;
+  const msg=document.getElementById("message");
+  if(correct && code==="4196"){
+    msg.style.color="#00ff99";
+    msg.textContent="검진 결과 확인 성공!";
+    document.getElementById("imagesSection").style.display="flex";
+  } else {
+    msg.style.color="#ff4444";
+    msg.textContent="존재하지 않는 검진 번호입니다.";
+  }
+});
+
+// ✅ 이미지 클릭 확대 기능
+const overlay = document.getElementById("overlay");
+const overlayImg = overlay.querySelector("img");
+const closeBtn = document.getElementById("closeOverlay");
+document.querySelectorAll("#imagesSection img").forEach(img=>{
+  img.addEventListener("click",()=>{
+    overlayImg.src = img.src;
+    overlay.style.display = "flex";
+  });
+});
+closeBtn.addEventListener("click",()=> overlay.style.display="none");
+overlay.addEventListener("click", e=>{
+  if(e.target===overlay) overlay.style.display="none";
+});
+
+// 매트릭스 효과
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+const letters="01".split("");
+const fontSize=16;
+const columns=canvas.width/fontSize;
+const drops=Array(Math.floor(columns)).fill(1);
+function draw(){
+  if(!matrixRunning) return;
+  ctx.fillStyle="rgba(0,0,0,0.05)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#00ff99";
+  ctx.font=fontSize+"px monospace";
+  for(let i=0;i<drops.length;i++){
+    const text=letters[Math.floor(Math.random()*letters.length)];
+    ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+    if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+      drops[i]=0;
+    }
+    drops[i]++;
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
