@@ -5,165 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>건강검진 결과 보안 프로그램</title>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Malgun Gothic', sans-serif;
-    background: black;
-    color: #00ff99;
-    overflow-x: hidden;
-    overflow-y: auto;
-    text-align: center;
-    min-height: 100vh;
-  }
-
-  canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    z-index: -1;
-    background: black;
-    transition: opacity 2s ease;
-  }
-
-  /* 기존 intro 숨김, main 숨김 */
-  #intro, #main { display: none; }
-
-  /* 언어 선택 오버레이 */
-  #langOverlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    color: #00ff99;
-    text-align: center;
-  }
-
-  #langOverlay h2 {
-    font-size: 1.5rem;
-    margin-bottom: 30px;
-    text-shadow: 0 0 10px #00ff99;
-  }
-
-  .langBtn {
-    margin: 10px;
-    padding: 10px 20px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    background: transparent;
-    border: 2px solid #00ff99;
-    border-radius: 5px;
-    color: #00ff99;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: 0.3s;
-  }
-  .langBtn img {
-    width: 20px;
-    height: 14px;
-  }
-  .langBtn:hover {
-    background-color: rgba(0,255,153,0.1);
-  }
-
-  /* 상단 언어 변경 버튼 */
-  #topLangSelect {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 10px;
-    z-index: 9999;
-  }
-  #topLangSelect .langBtn { padding: 5px 10px; font-size: 0.9rem; }
-  
-  /* 기존 스타일 유지 */
-  .container {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 40px auto;
-    border: 2px solid #00a000;
-    box-shadow: 0 0 18px #00e000;
-  }
-
-  h1, p {
-    text-shadow: 0 0 5px #00ff99;
-    margin: 10px 0;
-  }
-
-  #instruction {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    color: #00ff99;
-    display: none;
-    text-shadow: 0 0 10px #00ff99;
-    animation: blink 1.5s infinite alternate;
-  }
-  @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
-
-  #sudokuGrid { margin: 20px auto; display: grid; grid-template-columns: repeat(9, 1fr); width: min(90vw, 380px); aspect-ratio: 1/1; border: 3px solid #00ff99; box-sizing: border-box; }
-  .cell { border: 1px solid #007000; font-weight: bold; font-size: clamp(14px, 2.5vw, 20px); color: #00e000; background-color: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; transition: background-color 0.4s, box-shadow 0.4s; box-sizing: border-box; }
-  .cell input { width: 100%; height: 100%; font-size: clamp(14px, 3vw, 20px); text-align: center; border: none; outline: none; background: transparent; color: #00ff99; }
-  .cell:nth-child(9n+1) { border-left: 2px solid #00ff99; }
-  .cell:nth-child(-n+9) { border-top: 2px solid #00ff99; }
-  .cell:nth-child(9n) { border-right: 2px solid #00ff99; }
-  .cell:nth-child(n+73) { border-bottom: 2px solid #00ff99; }
-  .cell:nth-child(n+19):nth-child(-n+27),
-  .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #00ff99; }
-  .prefilled { color: #00aa00; }
-  .correct-block { background-color: rgba(0,255,100,0.15) !important; box-shadow: 0 0 10px #00ff99 inset; }
-  .correct-cell { background-color: rgba(0,255,150,0.35) !important; box-shadow: 0 0 15px #00ff99 inset; }
-  .wrong { color: #ff4444 !important; text-shadow: 0 0 8px #ff0000; }
-
-  #message { min-height: 20px; margin-top: 10px; font-weight: bold; }
-  #codeSection { display: none; opacity: 0; transition: opacity 1s ease; }
-  #codeSection.show { display: block; opacity: 1; }
-  #codeInput { width: 150px; padding: 8px; margin-top: 10px; font-size: 18px; text-align: center; border: 2px solid #00a000; border-radius: 5px; background-color: #000; color: #00ff99; box-shadow: 0 0 10px #00e000; }
-  #verifyBtn { display: block; margin: 10px auto 0; font-size: 18px; padding: 7px 15px; cursor: pointer; background: #008000; color: white; border: 1px solid #00a000; border-radius: 5px; box-shadow: 0 0 10px #00e000; }
-  #verifyBtn:hover { background: #00c000; }
-  #imagesSection { margin-top: 30px; display: none; justify-content: center; gap: 15px; flex-wrap: wrap; }
-  #imagesSection img { width: 45%; border-radius: 10px; box-shadow: 0 0 15px #00ff99; cursor: pointer; transition: transform 0.3s; }
-  #imagesSection img:hover { transform: scale(1.05); }
-  #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
-  #overlay img { max-width: 90vw; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 20px #00ff99; }
-  #closeOverlay { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; color: #00ff99; cursor: pointer; text-shadow: 0 0 10px #00ff99; }
-
-  @media (max-width: 480px) {
-    #sudokuGrid { width: 95vw; max-width: 360px; }
-    .container { padding: 15px; margin: 20px auto; }
-    #imagesSection img { width: 90%; }
-    #overlay img { max-width: 95vw; max-height: 75vh; }
-  }
+  body {margin:0; font-family:'Malgun Gothic',sans-serif; background:black; color:#00ff99; overflow-x:hidden; overflow-y:auto; text-align:center; min-height:100vh;}
+  canvas {position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; background:black; transition:opacity 2s ease;}
+  #langSelect {position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#00ff99; text-align:center; font-size:1.2rem;}
+  #langSelect button {margin:0 10px; padding:8px 12px; font-size:1rem; cursor:pointer; background:#000; color:#00ff99; border:1px solid #00a000; border-radius:5px; box-shadow:0 0 10px #00e000;}
+  #langSelect button:hover{background:#008000;}
+  .langTop {position:fixed; top:5px; right:5px; display:flex; gap:5px; font-size:0.9rem; z-index:999;}
+  .langTop button {padding:3px 6px; font-size:0.8rem; cursor:pointer; background:#000; color:#00ff99; border:1px solid #00a000; border-radius:3px; box-shadow:0 0 6px #00e000;}
+  .langTop button:hover { background:#008000;}
+  #intro {font-size:1.3rem; color:#00ff99; text-shadow:0 0 10px #00ff99; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); display:none;}
+  .container {background-color:rgba(0,0,0,0.8); padding:20px; border-radius:10px; max-width:800px; margin:40px auto; border:2px solid #00a000; box-shadow:0 0 18px #00e000; display:none;}
+  h1,p{text-shadow:0 0 5px #00ff99; margin:10px 0;}
+  #instruction{font-size:1.1rem; margin-bottom:10px; color:#00ff99; display:none; text-shadow:0 0 10px #00ff99; animation:blink 1.5s infinite alternate;}
+  @keyframes blink{from{opacity:1;}to{opacity:0.6;}}
+  #sudokuGrid{margin:20px auto; display:grid; grid-template-columns:repeat(9,1fr); width:min(90vw,380px); aspect-ratio:1/1; border:3px solid #00ff99; box-sizing:border-box;}
+  .cell{border:1px solid #007000; font-weight:bold; font-size:clamp(14px,2.5vw,20px); color:#00e000; background-color:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; transition:background-color 0.4s,box-shadow 0.4s; box-sizing:border-box;}
+  .cell input{width:100%; height:100%; font-size:clamp(14px,3vw,20px); text-align:center; border:none; outline:none; background:transparent; color:#00ff99;}
+  .cell:nth-child(9n+1){border-left:2px solid #00ff99;}
+  .cell:nth-child(-n+9){border-top:2px solid #00ff99;}
+  .cell:nth-child(9n){border-right:2px solid #00ff99;}
+  .cell:nth-child(n+73){border-bottom:2px solid #00ff99;}
+  .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #00ff99;}
+  .prefilled{color:#00aa00;}
+  .correct-block{background-color:rgba(0,255,100,0.15)!important; box-shadow:0 0 10px #00ff99 inset;}
+  .correct-cell{background-color:rgba(0,255,150,0.35)!important; box-shadow:0 0 15px #00ff99 inset;}
+  .wrong{color:#ff4444!important; text-shadow:0 0 8px #ff0000;}
+  #message{min-height:20px; margin-top:10px; font-weight:bold;}
+  #codeSection{display:none; opacity:0; transition:opacity 1s ease;}
+  #codeSection.show{display:block; opacity:1;}
+  #codeInput{width:150px; padding:8px; margin-top:10px; font-size:18px; text-align:center; border:2px solid #00a000; border-radius:5px; background-color:#000; color:#00ff99; box-shadow:0 0 10px #00e000;}
+  #verifyBtn{display:block; margin:10px auto 0; font-size:18px; padding:7px 15px; cursor:pointer; background:#008000; color:white; border:1px solid #00a000; border-radius:5px; box-shadow:0 0 10px #00e000;}
+  #verifyBtn:hover{background:#00c000;}
+  #imagesSection{margin-top:30px; display:none; justify-content:center; gap:15px; flex-wrap:wrap;}
+  #imagesSection img{width:45%; border-radius:10px; box-shadow:0 0 15px #00ff99; cursor:pointer; transition:transform 0.3s;}
+  #imagesSection img:hover{transform:scale(1.05);}
+  #overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:9999; flex-direction:column;}
+  #overlay img{max-width:90vw; max-height:80vh; border-radius:10px; box-shadow:0 0 20px #00ff99;}
+  #closeOverlay{position:absolute; top:15px; right:20px; font-size:28px; font-weight:bold; color:#00ff99; cursor:pointer; text-shadow:0 0 10px #00ff99;}
+  #overlayText{color:#00ff99; margin-top:10px;}
+  @media(max-width:480px){#sudokuGrid{width:95vw; max-width:360px;} .container{padding:15px; margin:20px auto;} #imagesSection img{width:90%;} #overlay img{max-width:95vw; max-height:75vh;} .langTop{font-size:0.7rem; gap:3px; top:3px; right:3px;} .langTop button{padding:2px 4px; font-size:0.6rem;}}
 </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
 
-<!-- 언어 선택 오버레이 -->
-<div id="langOverlay">
-  <h2>Select Language / 언어 선택</h2>
-  <button class="langBtn" data-lang="ko"><img src="korea.png" /> 한국어</button>
-  <button class="langBtn" data-lang="en"><img src="english.png" /> English</button>
+<!-- 언어 선택 화면 -->
+<div id="langSelect">
+  <p>언어를 선택해주세요 / Please select a language</p>
+  <button id="korBtn">한국어</button>
+  <button id="engBtn">English</button>
 </div>
 
 <!-- 상단 언어 변경 -->
-<div id="topLangSelect" style="display:none;">
-  <button class="langBtn" data-lang="ko"><img src="korea.png" /> 한국어</button>
-  <button class="langBtn" data-lang="en"><img src="english.png" /> English</button>
+<div class="langTop" id="langTop" style="display:none;">
+  <button id="topKor">한국어</button>
+  <button id="topEng">English</button>
 </div>
 
+<!-- 인트로 -->
 <div id="intro">온라인 건강 검진 결과 조회 보안 프로그램</div>
 
+<!-- 메인 컨테이너 -->
 <div class="container" id="main">
-  <h1>나염라님 환영합니다</h1>
+  <h1 id="welcome">나염라님 환영합니다</h1>
   <p id="instruction">검진 번호를 입력해주세요.</p>
   <div id="sudokuGrid"></div>
 
@@ -174,189 +79,96 @@
   </div>
 </div>
 
+<!-- 이미지 섹션 -->
 <div id="imagesSection">
-  <img src="https://bagjueun307.github.io/health-check/img1.jpg.png" alt="검진 결과 1">
-  <img src="https://bagjueun307.github.io/health-check/img2.jpg.png" alt="검진 결과 2">
+  <img id="img1" src="https://bagjueun307.github.io/health-check/img1.jpg.png" alt="검진 결과 1">
+  <img id="img2" src="https://bagjueun307.github.io/health-check/img2.jpg.png" alt="검진 결과 2">
 </div>
 
+<!-- 이미지 확대 오버레이 -->
 <div id="overlay">
   <span id="closeOverlay">✕</span>
   <img src="" alt="확대이미지">
+  <p id="overlayText"></p>
 </div>
 
 <script>
-// --- 언어 선택 처리 ---
-let userLang = null;
-
-function showMain() {
-  document.getElementById("langOverlay").style.display = "none";
-  document.getElementById("topLangSelect").style.display = "flex";
-  document.getElementById("intro").style.display = "block";
-  document.getElementById("main").style.display = "block";
-  document.getElementById("instruction").style.display = "block";
-  startMatrix();
-  applyLanguage();
+// ===== 언어 선택 =====
+let lang="ko"; 
+function setLanguage(selected){
+  lang=selected;
+  document.getElementById("langTop").style.display="flex";
+  document.getElementById("langSelect").style.display="none";
+  document.getElementById("intro").style.display="block";
+  document.getElementById("intro").textContent=lang==="ko"?"온라인 건강 검진 결과 조회 보안 프로그램":"Online Health Check-up Result Security Program";
+  document.getElementById("img1").alt=lang==="ko"?"검진 결과 1":"Check-up Result 1";
+  document.getElementById("img2").alt=lang==="ko"?"검진 결과 2":"Check-up Result 2";
+  document.getElementById("welcome").textContent=lang==="ko"?"나염라님 환영합니다":"Welcome Yeom-ra Na";
+  document.getElementById("instruction").textContent=lang==="ko"?"검진 번호를 입력해주세요.":"Please enter your check-up code.";
+  setTimeout(()=>{ 
+    document.getElementById("intro").style.display="none"; 
+    document.getElementById("main").style.display="block"; 
+    matrixRunning=false; 
+    document.getElementById("matrix").style.opacity="0"; 
+    document.getElementById("instruction").style.display="block"; 
+  },3000);
 }
+document.getElementById("korBtn").addEventListener("click",()=>setLanguage("ko"));
+document.getElementById("engBtn").addEventListener("click",()=>setLanguage("eng"));
+document.getElementById("topKor").addEventListener("click",()=>setLanguage("ko"));
+document.getElementById("topEng").addEventListener("click",()=>setLanguage("eng"));
 
-document.querySelectorAll("#langOverlay .langBtn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    userLang = btn.dataset.lang;
-    localStorage.setItem("userLang", userLang);
-    showMain();
-  });
-});
-
-// 상단 언어 변경 버튼
-document.querySelectorAll("#topLangSelect .langBtn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    userLang = btn.dataset.lang;
-    localStorage.setItem("userLang", userLang);
-    applyLanguage();
-  });
-});
-
-// 페이지 로드 시 저장된 언어가 있으면 바로 적용
-window.addEventListener("DOMContentLoaded", ()=>{
-  const saved = localStorage.getItem("userLang");
-  if(saved){
-    userLang = saved;
-    document.getElementById("langOverlay").style.display = "none";
-    showMain();
-  }
-});
-
-// 언어 적용 함수
-function applyLanguage(){
-  if(userLang==="ko"){
-    document.getElementById("intro").textContent = "온라인 건강 검진 결과 조회 보안 프로그램";
-    document.getElementById("instruction").textContent = "검진 번호를 입력해주세요.";
-    document.querySelector("#main h1").textContent = "나염라님 환영합니다";
-    document.getElementById("codeInput").placeholder = "검진 번호 입력 (4자리)";
-    document.getElementById("verifyBtn").textContent = "검진 번호 제출";
-    document.querySelectorAll("#imagesSection img")[0].alt="검진 결과 1";
-    document.querySelectorAll("#imagesSection img")[1].alt="검진 결과 2";
-  } else {
-    document.getElementById("intro").textContent = "Online Health Check Result Security Program";
-    document.getElementById("instruction").textContent = "Please enter your Check-up Code.";
-    document.querySelector("#main h1").textContent = "Welcome, Yeom-ra Na";
-    document.getElementById("codeInput").placeholder = "Enter Check-up Code (4 digits)";
-    document.getElementById("verifyBtn").textContent = "Submit Check-up Code";
-    document.querySelectorAll("#imagesSection img")[0].alt="Check-up Result 1";
-    document.querySelectorAll("#imagesSection img")[1].alt="Check-up Result 2";
-  }
+// ===== 매트릭스 효과 =====
+let matrixRunning=true;
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+const letters="01".split("");
+const fontSize=16;
+const columns=canvas.width/fontSize;
+const drops=Array(Math.floor(columns)).fill(1);
+function draw(){ 
+  if(!matrixRunning) return; 
+  ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillRect(0,0,canvas.width,canvas.height); 
+  ctx.fillStyle="#00ff99"; ctx.font=fontSize+"px monospace"; 
+  for(let i=0;i<drops.length;i++){ 
+    const text=letters[Math.floor(Math.random()*letters.length)]; 
+    ctx.fillText(text,i*fontSize,drops[i]*fontSize); 
+    if(drops[i]*fontSize>canvas.height && Math.random()>0.975){drops[i]=0;} 
+    drops[i]++; 
+  } 
+  requestAnimationFrame(draw);
 }
+draw();
 
-// --- 기존 로직 그대로 ---
-let matrixRunning = true;
-function startMatrix(){
-  const canvas=document.getElementById("matrix");
-  const ctx=canvas.getContext("2d");
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  const letters="01".split("");
-  const fontSize=16;
-  const columns=canvas.width/fontSize;
-  const drops=Array(Math.floor(columns)).fill(1);
-  function draw(){
-    if(!matrixRunning) return;
-    ctx.fillStyle="rgba(0,0,0,0.05)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle="#00ff99";
-    ctx.font=fontSize+"px monospace";
-    for(let i=0;i<drops.length;i++){
-      const text=letters[Math.floor(Math.random()*letters.length)];
-      ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-      if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-        drops[i]=0;
-      }
-      drops[i]++;
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
+// ===== 스도쿠, 검증 로직 (기존 코드 그대로 유지) =====
+const puzzle=[[1,2,3,0,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,4,5,6,7,8,9,0],[5,0,7,8,9,1,2,3,4],[8,9,1,2,3,4,5,6,7],[3,4,5,6,7,8,9,1,2],[6,7,8,0,1,2,3,4,5],[9,1,2,3,4,5,6,7,8]];
+const solution=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,4,5,6,7,8,9,1],[5,6,7,8,9,1,2,3,4],[8,9,1,2,3,4,5,6,7],[3,4,5,6,7,8,9,1,2],[6,7,8,9,1,2,3,4,5],[9,1,2,3,4,5,6,7,8]];
 
-// --- 기존 스도쿠 / 검증 / 이미지 확대 로직 그대로 ---
-const puzzle = [
-  [1,2,3,0,5,6,7,8,9],
-  [4,5,6,7,8,9,1,2,3],
-  [7,8,9,1,2,3,4,5,6],
-  [2,3,4,5,6,7,8,9,0],
-  [5,0,7,8,9,1,2,3,4],
-  [8,9,1,2,3,4,5,6,7],
-  [3,4,5,6,7,8,9,1,2],
-  [6,7,8,0,1,2,3,4,5],
-  [9,1,2,3,4,5,6,7,8]
-];
-const solution = [
-  [1,2,3,4,5,6,7,8,9],
-  [4,5,6,7,8,9,1,2,3],
-  [7,8,9,1,2,3,4,5,6],
-  [2,3,4,5,6,7,8,9,1],
-  [5,6,7,8,9,1,2,3,4],
-  [8,9,1,2,3,4,5,6,7],
-  [3,4,5,6,7,8,9,1,2],
-  [6,7,8,9,1,2,3,4,5],
-  [9,1,2,3,4,5,6,7,8]
-];
-
-const grid = document.getElementById("sudokuGrid");
+const grid=document.getElementById("sudokuGrid");
 function renderSudoku(){
-  grid.innerHTML = "";
+  grid.innerHTML="";
   for(let r=0;r<9;r++){
     for(let c=0;c<9;c++){
       const cell=document.createElement("div");
       cell.className="cell";
       if(puzzle[r][c]===0){
         const input=document.createElement("input");
-        input.maxLength=1;
-        input.dataset.row=r;
-        input.dataset.col=c;
+        input.maxLength=1; input.dataset.row=r; input.dataset.col=c;
         input.addEventListener("input", e=>{
-          const v=e.target.value;
-          const rr=+e.target.dataset.row, cc=+e.target.dataset.col;
-          const correct = (v == solution[rr][cc]);
-          const blockRow = Math.floor(rr/3)*3;
-          const blockCol = Math.floor(cc/3)*3;
-          const cells = document.querySelectorAll(".cell");
-
-          for(let i=blockRow;i<blockRow+3;i++){
-            for(let j=blockCol;j<blockCol+3;j++){
-              const index = i*9+j;
-              cells[index].classList.remove("correct-block");
-            }
-          }
-
-          if(correct){
-            for(let i=blockRow;i<blockRow+3;i++){
-              for(let j=blockCol;j<blockCol+3;j++){
-                const index = i*9+j;
-                cells[index].classList.add("correct-block");
-              }
-            }
-            e.target.parentElement.classList.add("correct-cell");
-            e.target.classList.remove("wrong");
-          } else {
-            e.target.parentElement.classList.remove("correct-cell");
-            e.target.classList.add("wrong");
-          }
-
-          const inputs=grid.querySelectorAll("input");
-          let allCorrect=true;
-          inputs.forEach(inp=>{
-            const r=+inp.dataset.row, c=+inp.dataset.col;
-            if(inp.value!=solution[r][c]) allCorrect=false;
-          });
-          if(allCorrect){
-            document.getElementById("instruction").style.display="none";
-            document.getElementById("codeSection").classList.add("show");
-          }
+          const v=e.target.value; const rr=+e.target.dataset.row, cc=+e.target.dataset.col;
+          const correct=(v==solution[rr][cc]);
+          const blockRow=Math.floor(rr/3)*3, blockCol=Math.floor(cc/3)*3;
+          const cells=document.querySelectorAll(".cell");
+          for(let i=blockRow;i<blockRow+3;i++){for(let j=blockCol;j<blockCol+3;j++){cells[i*9+j].classList.remove("correct-block");}}
+          if(correct){for(let i=blockRow;i<blockRow+3;i++){for(let j=blockCol;j<blockCol+3;j++){cells[i*9+j].classList.add("correct-block");}} e.target.parentElement.classList.add("correct-cell"); e.target.classList.remove("wrong");}
+          else{e.target.parentElement.classList.remove("correct-cell"); e.target.classList.add("wrong");}
+          const inputs=grid.querySelectorAll("input"); let allCorrect=true;
+          inputs.forEach(inp=>{ const r=+inp.dataset.row, c=+inp.dataset.col; if(inp.value!=solution[r][c]) allCorrect=false; });
+          if(allCorrect){ document.getElementById("instruction").style.display="none"; document.getElementById("codeSection").classList.add("show"); }
         });
         cell.appendChild(input);
-      } else {
-        cell.textContent=puzzle[r][c];
-        cell.classList.add("prefilled");
-      }
+      } else { cell.textContent=puzzle[r][c]; cell.classList.add("prefilled"); }
       grid.appendChild(cell);
     }
   }
@@ -364,39 +176,27 @@ function renderSudoku(){
 renderSudoku();
 
 document.getElementById("verifyBtn").addEventListener("click",()=>{
-  const inputs=grid.querySelectorAll("input");
-  let correct=true;
-  inputs.forEach(inp=>{
-    const r=+inp.dataset.row, c=+inp.dataset.col;
-    if(inp.value!=solution[r][c]) correct=false;
-  });
-  const code=document.getElementById("codeInput").value;
-  const msg=document.getElementById("message");
-  if(correct && code==="4196"){
-    msg.style.color="#00ff99";
-    msg.textContent="검진 결과 확인 성공!";
-    document.getElementById("imagesSection").style.display="flex";
-  } else {
-    msg.style.color="#ff4444";
-    msg.textContent="존재하지 않는 검진 번호입니다.";
-  }
+  const inputs=grid.querySelectorAll("input"); let correct=true;
+  inputs.forEach(inp=>{ const r=+inp.dataset.row, c=+inp.dataset.col; if(inp.value!=solution[r][c]) correct=false; });
+  const code=document.getElementById("codeInput").value; const msg=document.getElementById("message");
+  if(correct && code==="4196"){ msg.style.color="#00ff99"; msg.textContent=lang==="ko"?"검진 결과 확인 성공!":"Check-up verification success!"; document.getElementById("imagesSection").style.display="flex"; }
+  else{ msg.style.color="#ff4444"; msg.textContent=lang==="ko"?"존재하지 않는 검진 번호입니다.":"Invalid check-up code."; document.getElementById("imagesSection").style.display="none";}
 });
 
 // 이미지 확대
-const overlay = document.getElementById("overlay");
-const overlayImg = overlay.querySelector("img");
-const closeBtn = document.getElementById("closeOverlay");
+const overlay=document.getElementById("overlay");
+const overlayImg=overlay.querySelector("img");
+const overlayText=document.getElementById("overlayText");
+const closeBtn=document.getElementById("closeOverlay");
 document.querySelectorAll("#imagesSection img").forEach(img=>{
-  img.addEventListener("click",()=>{
-    overlayImg.src = img.src;
-    overlay.style.display = "flex";
+  img.addEventListener("click", ()=>{
+    overlayImg.src=img.src;
+    overlayText.textContent=(img.id==="img1")?(lang==="ko"?"검진 결과 1":"Check-up Result 1"):(lang==="ko"?"검진 결과 2":"Check-up Result 2");
+    overlay.style.display="flex";
   });
 });
-closeBtn.addEventListener("click",()=> overlay.style.display="none");
-overlay.addEventListener("click", e=>{
-  if(e.target===overlay) overlay.style.display="none";
-});
+closeBtn.addEventListener("click",()=>overlay.style.display="none");
+overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.style.display="none";});
 </script>
-
 </body>
 </html>
