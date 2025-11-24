@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>건강검진 결과 보안 프로그램</title>
 <style>
+  /* ---------------- 기존 스타일 그대로 유지 ---------------- */
   body {
     margin: 0;
     font-family: 'Malgun Gothic', sans-serif;
@@ -15,221 +16,75 @@
     text-align: center;
     min-height: 100vh;
   }
-
-  canvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    z-index: -1;
-    background: black;
-    transition: opacity 2s ease;
-  }
-
-  #intro {
-    font-size: 1.3rem;
-    color: #00ff99;
-    text-shadow: 0 0 10px #00ff99;
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .container {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 800px;
-    margin: 40px auto;
-    border: 2px solid #00a000;
-    box-shadow: 0 0 18px #00e000;
-    display: none;
-  }
-
-  h1, p {
-    text-shadow: 0 0 5px #00ff99;
-    margin: 10px 0;
-  }
-
-  #instruction {
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-    color: #00ff99;
-    display: none;
-    text-shadow: 0 0 10px #00ff99;
-    animation: blink 1.5s infinite alternate;
-  }
-  @keyframes blink {
-    from { opacity: 1; }
-    to { opacity: 0.6; }
-  }
-
-  #sudokuGrid {
-    margin: 20px auto;
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    width: min(90vw, 380px);
-    aspect-ratio: 1/1;
-    border: 3px solid #00ff99;
-    box-sizing: border-box;
-  }
-
-  .cell {
-    border: 1px solid #007000;
-    font-weight: bold;
-    font-size: clamp(14px, 2.5vw, 20px);
-    color: #00e000;
-    background-color: rgba(0,0,0,0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.4s, box-shadow 0.4s;
-    box-sizing: border-box;
-  }
-
-  .cell input {
-    width: 100%; height: 100%;
-    font-size: clamp(14px, 3vw, 20px);
-    text-align: center;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #00ff99;
-  }
-
-  /* 3x3 경계선 */
-  .cell:nth-child(9n+1) { border-left: 2px solid #00ff99; }
-  .cell:nth-child(-n+9) { border-top: 2px solid #00ff99; }
-  .cell:nth-child(9n) { border-right: 2px solid #00ff99; }
-  .cell:nth-child(n+73) { border-bottom: 2px solid #00ff99; }
+  canvas { position: fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; background:black; transition:opacity 2s ease;}
+  #intro { font-size:1.3rem; color:#00ff99; text-shadow:0 0 10px #00ff99; position: fixed; top:50%; left:50%; transform:translate(-50%, -50%);}
+  .container { background-color: rgba(0,0,0,0.8); padding:20px; border-radius:10px; max-width:800px; margin:40px auto; border:2px solid #00a000; box-shadow:0 0 18px #00e000; display:none;}
+  h1, p { text-shadow:0 0 5px #00ff99; margin:10px 0;}
+  #instruction { font-size:1.1rem; margin-bottom:10px; color:#00ff99; display:none; text-shadow:0 0 10px #00ff99; animation: blink 1.5s infinite alternate;}
+  @keyframes blink { from{opacity:1;} to{opacity:0.6;} }
+  #sudokuGrid { margin:20px auto; display:grid; grid-template-columns:repeat(9,1fr); width:min(90vw,380px); aspect-ratio:1/1; border:3px solid #00ff99; box-sizing:border-box;}
+  .cell { border:1px solid #007000; font-weight:bold; font-size:clamp(14px,2.5vw,20px); color:#00e000; background-color:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; transition: background-color 0.4s, box-shadow 0.4s; box-sizing:border-box;}
+  .cell input { width:100%; height:100%; font-size:clamp(14px,3vw,20px); text-align:center; border:none; outline:none; background:transparent; color:#00ff99;}
+  .cell:nth-child(9n+1) { border-left:2px solid #00ff99; }
+  .cell:nth-child(-n+9) { border-top:2px solid #00ff99; }
+  .cell:nth-child(9n) { border-right:2px solid #00ff99; }
+  .cell:nth-child(n+73) { border-bottom:2px solid #00ff99; }
   .cell:nth-child(n+19):nth-child(-n+27),
-  .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #00ff99; }
-
-  .prefilled { color: #00aa00; }
-
-  .correct-block {
-    background-color: rgba(0,255,100,0.15) !important;
-    box-shadow: 0 0 10px #00ff99 inset;
+  .cell:nth-child(n+46):nth-child(-n+54) { border-bottom:2px solid #00ff99; }
+  .prefilled { color:#00aa00; }
+  .correct-block { background-color: rgba(0,255,100,0.15) !important; box-shadow:0 0 10px #00ff99 inset;}
+  .correct-cell { background-color: rgba(0,255,150,0.35) !important; box-shadow:0 0 15px #00ff99 inset;}
+  .wrong { color:#ff4444 !important; text-shadow:0 0 8px #ff0000;}
+  #message { min-height:20px; margin-top:10px; font-weight:bold;}
+  #codeSection { display:none; opacity:0; transition: opacity 1s ease;}
+  #codeSection.show { display:block; opacity:1; }
+  #codeInput { width:150px; padding:8px; margin-top:10px; font-size:18px; text-align:center; border:2px solid #00a000; border-radius:5px; background-color:#000; color:#00ff99; box-shadow:0 0 10px #00e000;}
+  #verifyBtn { display:block; margin:10px auto 0; font-size:18px; padding:7px 15px; cursor:pointer; background:#008000; color:white; border:1px solid #00a000; border-radius:5px; box-shadow:0 0 10px #00e000;}
+  #verifyBtn:hover { background:#00c000; }
+  #imagesSection { margin-top:30px; display:none; justify-content:center; gap:15px; flex-wrap:wrap;}
+  #imagesSection img { width:45%; border-radius:10px; box-shadow:0 0 15px #00ff99; cursor:pointer; transition: transform 0.3s;}
+  #imagesSection img:hover { transform:scale(1.05);}
+  #overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:9999; flex-direction:column;}
+  #overlay img { max-width:90vw; max-height:80vh; border-radius:10px; box-shadow:0 0 20px #00ff99;}
+  #closeOverlay { position:absolute; top:15px; right:20px; font-size:28px; font-weight:bold; color:#00ff99; cursor:pointer; text-shadow:0 0 10px #00ff99;}
+  
+  /* ---------------- 모바일 최적화 ---------------- */
+  @media(max-width:480px){
+    #sudokuGrid { width:95vw; max-width:360px;}
+    .container { padding:15px; margin:20px auto;}
+    #imagesSection img { width:90%; }
+    #overlay img { max-width:95vw; max-height:75vh; }
+    #languageSelector { font-size:0.85rem; }
   }
 
-  .correct-cell {
-    background-color: rgba(0,255,150,0.35) !important;
-    box-shadow: 0 0 15px #00ff99 inset;
+  /* ---------------- 언어 선택 화면 ---------------- */
+  #languageOverlay {
+    display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:10000; justify-content:center; align-items:center; flex-direction:column;
   }
-
-  .wrong {
-    color: #ff4444 !important;
-    text-shadow: 0 0 8px #ff0000;
+  #languageOverlay button {
+    margin: 10px; padding: 10px 20px; font-size:1rem; border:none; border-radius:5px; cursor:pointer; color:#00ff99; background:rgba(0,0,0,0.8); box-shadow:0 0 10px #00e000;
   }
-
-  #message {
-    min-height: 20px;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-
-  #codeSection {
-    display: none;
-    opacity: 0;
-    transition: opacity 1s ease;
-  }
-
-  #codeSection.show {
-    display: block;
-    opacity: 1;
-  }
-
-  #codeInput {
-    width: 150px;
-    padding: 8px;
-    margin-top: 10px;
-    font-size: 18px;
-    text-align: center;
-    border: 2px solid #00a000;
-    border-radius: 5px;
-    background-color: #000;
-    color: #00ff99;
-    box-shadow: 0 0 10px #00e000;
-  }
-
-  #verifyBtn {
-    display: block;
-    margin: 10px auto 0;
-    font-size: 18px;
-    padding: 7px 15px;
-    cursor: pointer;
-    background: #008000;
-    color: white;
-    border: 1px solid #00a000;
-    border-radius: 5px;
-    box-shadow: 0 0 10px #00e000;
-  }
-
-  #verifyBtn:hover { background: #00c000; }
-
-  #imagesSection {
-    margin-top: 30px;
-    display: none;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-
-  #imagesSection img {
-    width: 45%;
-    border-radius: 10px;
-    box-shadow: 0 0 15px #00ff99;
-    cursor: pointer;
-    transition: transform 0.3s;
-  }
-  #imagesSection img:hover { transform: scale(1.05); }
-
-  /* ✅ 오버레이 (확대 보기용) */
-  #overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95);
-    justify-content: center; align-items: center;
-    z-index: 9999;
-    flex-direction: column;
-  }
-
-  #overlay img {
-    max-width: 90vw;
-    max-height: 80vh;
-    border-radius: 10px;
-    box-shadow: 0 0 20px #00ff99;
-  }
-
-  #closeOverlay {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #00ff99;
-    cursor: pointer;
-    text-shadow: 0 0 10px #00ff99;
-  }
-
-  @media (max-width: 480px) {
-    #sudokuGrid { width: 95vw; max-width: 360px; }
-    .container { padding: 15px; margin: 20px auto; }
-    #imagesSection img { width: 90%; }
-    #overlay img { max-width: 95vw; max-height: 75vh; }
-  }
+  #languageOverlay button:hover { background:rgba(0,255,0,0.2);}
 </style>
 </head>
 <body>
 <canvas id="matrix"></canvas>
 <div id="intro">온라인 건강 검진 결과 조회 보안 프로그램</div>
 
+<!-- ---------------- 언어 선택 오버레이 ---------------- -->
+<div id="languageOverlay">
+  <h2 style="color:#00ff99; text-shadow:0 0 10px #00ff99;">언어를 선택해주세요</h2>
+  <div>
+    <button data-lang="ko"><img src="https://bagjueun307.github.io/health-check/korea.png" style="width:18px; vertical-align:middle;"> 한국어</button>
+    <button data-lang="en"><img src="https://bagjueun307.github.io/health-check/english.png" style="width:18px; vertical-align:middle;"> English</button>
+  </div>
+</div>
+
+<!-- ---------------- 기존 본문 ---------------- -->
 <div class="container" id="main">
-  <h1>나염라님 환영합니다</h1>
+  <h1 id="welcomeText">나염라님 환영합니다</h1>
   <p id="instruction">검진 번호를 입력해주세요.</p>
   <div id="sudokuGrid"></div>
-
   <div id="codeSection">
     <p id="message"></p>
     <input type="text" id="codeInput" maxlength="4" placeholder="검진 번호 입력 (4자리)" />
@@ -242,14 +97,50 @@
   <img src="https://bagjueun307.github.io/health-check/img2.jpg.png" alt="검진 결과 2">
 </div>
 
-<!-- ✅ 이미지 확대용 오버레이 -->
 <div id="overlay">
   <span id="closeOverlay">✕</span>
   <img src="" alt="확대이미지">
 </div>
 
 <script>
-// 기존 로직 유지
+/* ---------------- 언어 선택 ---------------- */
+let lang = localStorage.getItem('lang') || 'ko';
+const languageOverlay = document.getElementById('languageOverlay');
+if(lang==='ko'){ languageOverlay.style.display='none'; }
+document.querySelectorAll('#languageOverlay button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    lang = btn.dataset.lang;
+    localStorage.setItem('lang', lang);
+    languageOverlay.style.display='none';
+    applyLanguage();
+  });
+});
+
+function applyLanguage(){
+  const welcome = document.getElementById('welcomeText');
+  const instruction = document.getElementById('instruction');
+  const verifyBtn = document.getElementById('verifyBtn');
+  if(lang==='ko'){
+    welcome.textContent = '나염라님 환영합니다';
+    instruction.textContent = '검진 번호를 입력해주세요.';
+    verifyBtn.textContent = '검진 번호 제출';
+    document.querySelectorAll('#imagesSection img').forEach(img=>{
+      img.src = img.src.replace('_english','');
+    });
+  } else {
+    welcome.textContent = 'Welcome, Yeom-ra Na';
+    instruction.textContent = 'Please enter your Check-up Code.';
+    verifyBtn.textContent = 'Submit Check-up Code';
+    document.querySelectorAll('#imagesSection img').forEach(img=>{
+      if(!img.src.includes('_english')){
+        img.src = img.src.replace('.jpg.png','_english.jpg.png');
+      }
+    });
+  }
+}
+applyLanguage();
+
+/* ---------------- 기존 로직 그대로 유지 ---------------- */
 let matrixRunning = true;
 setTimeout(() => {
   document.getElementById("intro").style.display = "none";
@@ -281,7 +172,6 @@ const solution = [
   [6,7,8,9,1,2,3,4,5],
   [9,1,2,3,4,5,6,7,8]
 ];
-
 const grid = document.getElementById("sudokuGrid");
 function renderSudoku(){
   grid.innerHTML = "";
@@ -301,14 +191,12 @@ function renderSudoku(){
           const blockRow = Math.floor(rr/3)*3;
           const blockCol = Math.floor(cc/3)*3;
           const cells = document.querySelectorAll(".cell");
-
           for(let i=blockRow;i<blockRow+3;i++){
             for(let j=blockCol;j<blockCol+3;j++){
               const index = i*9+j;
               cells[index].classList.remove("correct-block");
             }
           }
-
           if(correct){
             for(let i=blockRow;i<blockRow+3;i++){
               for(let j=blockCol;j<blockCol+3;j++){
@@ -322,7 +210,6 @@ function renderSudoku(){
             e.target.parentElement.classList.remove("correct-cell");
             e.target.classList.add("wrong");
           }
-
           const inputs=grid.querySelectorAll("input");
           let allCorrect=true;
           inputs.forEach(inp=>{
@@ -345,7 +232,6 @@ function renderSudoku(){
 }
 renderSudoku();
 
-// 기존 검증 로직 유지
 document.getElementById("verifyBtn").addEventListener("click",()=>{
   const inputs=grid.querySelectorAll("input");
   let correct=true;
@@ -357,15 +243,15 @@ document.getElementById("verifyBtn").addEventListener("click",()=>{
   const msg=document.getElementById("message");
   if(correct && code==="4196"){
     msg.style.color="#00ff99";
-    msg.textContent="검진 결과 확인 성공!";
+    msg.textContent = (lang==='ko')?"검진 결과 확인 성공!":"Check-up verified successfully!";
     document.getElementById("imagesSection").style.display="flex";
   } else {
     msg.style.color="#ff4444";
-    msg.textContent="존재하지 않는 검진 번호입니다.";
+    msg.textContent = (lang==='ko')?"존재하지 않는 검진 번호입니다.":"Invalid Check-up Code.";
   }
 });
 
-// ✅ 이미지 클릭 확대 기능
+// 이미지 확대
 const overlay = document.getElementById("overlay");
 const overlayImg = overlay.querySelector("img");
 const closeBtn = document.getElementById("closeOverlay");
@@ -380,7 +266,7 @@ overlay.addEventListener("click", e=>{
   if(e.target===overlay) overlay.style.display="none";
 });
 
-// 매트릭스 효과
+// 매트릭스
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
 canvas.width=window.innerWidth;
@@ -398,282 +284,12 @@ function draw(){
   for(let i=0;i<drops.length;i++){
     const text=letters[Math.floor(Math.random()*letters.length)];
     ctx.fillText(text,i*fontSize,drops[i]*fontSize);
-    if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
-      drops[i]=0;
-    }
+    if(drops[i]*fontSize>canvas.height && Math.random()>0.975){ drops[i]=0; }
     drops[i]++;
   }
   requestAnimationFrame(draw);
 }
 draw();
 </script>
-
-<!-- ============================
-     추가된 코드 (여기부터 — 원본 코드는 절대 수정하지 않음)
-     - 초기 언어 선택 오버레이
-     - 오른쪽 상단 언어 선택 (항상 표시)
-     - 언어 적용(텍스트 치환 + 이미지 _english 자동 변환)
-     - 메시지 변경 감지 및 즉시 번역
-   ============================ -->
-<style>
-  /* 언어 스위처 (우측 상단) */
-  #langSwitcher {
-    position: fixed;
-    top: 10px;
-    right: 15px;
-    display: flex;
-    gap: 12px;
-    z-index: 10002;
-    color: #00ff99;
-    font-size: 0.9rem;
-    cursor: pointer;
-    user-select: none;
-  }
-  #langSwitcher span { display:flex; align-items:center; gap:6px; padding:2px 4px; }
-  #langSwitcher span:hover { opacity:0.8; }
-
-  /* 초기 언어 선택 오버레이 (매트릭스 배경 그대로 보이도록 투명 처리) */
-  #langOverlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-    pointer-events: auto;
-  }
-  #langOverlay .panel {
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(0,255,153,0.06);
-    padding: 18px 24px;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-    display:flex;
-    gap:18px;
-    align-items:center;
-    justify-content:center;
-  }
-  #langOverlay .lang {
-    color: #00ff99;
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding: 6px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  #langOverlay .lang:hover { opacity: 0.85; transform: translateY(-2px); }
-  /* 선택 시 강조 */
-  #langOverlay .selected { box-shadow: 0 0 14px #00ff99; }
-  /* 모바일 대응 */
-  @media (max-width:480px){
-    #langOverlay .panel { gap:10px; padding:12px; }
-    #langOverlay .lang { font-size:0.9rem; padding:5px 8px; }
-    #langSwitcher { font-size:0.82rem; top:8px; right:10px; gap:8px; }
-  }
-</style>
-
-<!-- 오른쪽 상단 언어 토글 (항상 노출) -->
-<div id="langSwitcher" aria-hidden="false">
-  <span data-lang="ko" id="ls-ko">한국어</span>
-  <span data-lang="en" id="ls-en">English</span>
-</div>
-
-<!-- 초기 언어 선택 오버레이 -->
-<div id="langOverlay" role="dialog" aria-modal="true" style="display:none;">
-  <div class="panel" role="group" aria-label="언어 선택">
-    <div class="lang" data-lang="ko">한국어</div>
-    <div class="lang" data-lang="en">English</div>
-  </div>
-</div>
-
-<script>
-(function(){
-  // 안전한 네임스페이스로 추가 스크립트 실행 (원본 변수와 충돌 피함)
-  const STORAGE_KEY = "hc_lang_v1";
-  const defaultLang = localStorage.getItem(STORAGE_KEY) || null; // null -> show overlay
-  let currentLang = defaultLang || null;
-
-  // 번역 매핑 (네가 승인한 문구)
-  const translations = {
-    ko: {
-      intro: "온라인 건강 검진 결과 조회 보안 프로그램",
-      welcome: "나염라님 환영합니다",
-      instruction: "검진 번호를 입력해주세요.",
-      codePlaceholder: "검진 번호 입력 (4자리)",
-      verifyBtn: "검진 번호 제출",
-      success: "검진 결과 확인 성공!",
-      fail: "존재하지 않는 검진 번호입니다."
-    },
-    en: {
-      intro: "Online Health Check-up Result Secure Viewer",
-      welcome: "Welcome, Yeom-ra Na",
-      instruction: "Please enter your Check-up Code.",
-      codePlaceholder: "Enter Check-up Code (4 digits)",
-      verifyBtn: "Submit Code",
-      success: "Check-up Result Verified!",
-      fail: "Invalid Check-up Code"
-    }
-  };
-
-  // helper: insert _english before last dot in filename
-  function englishifySrc(src){
-    if(!src) return src;
-    const without = src.replace("_english", ""); // remove existing if any
-    const lastDot = without.lastIndexOf('.');
-    if(lastDot === -1) return without + "_english";
-    return without.slice(0,lastDot) + "_english" + without.slice(lastDot);
-  }
-
-  // Save original src in data attribute for safe restore
-  function ensureOrigDataAttr(img){
-    if(!img.dataset.origSrc){
-      img.dataset.origSrc = img.getAttribute('src') || "";
-    }
-  }
-
-  // Apply images according to currentLang
-  function applyImages(){
-    const imgs = document.querySelectorAll("#imagesSection img");
-    imgs.forEach(img=>{
-      ensureOrigDataAttr(img);
-      if(currentLang === "en"){
-        img.src = englishifySrc(img.dataset.origSrc);
-      } else {
-        img.src = img.dataset.origSrc;
-      }
-    });
-  }
-
-  // Apply text translations where applicable (non-destructive: only sets visible text)
-  function applyTexts(){
-    const t = translations[currentLang] || translations.ko;
-    const elIntro = document.getElementById("intro");
-    if(elIntro) elIntro.textContent = t.intro;
-
-    const h1 = document.querySelector("#main h1");
-    if(h1) h1.textContent = t.welcome;
-
-    const instr = document.getElementById("instruction");
-    if(instr) instr.textContent = t.instruction;
-
-    const codeInput = document.getElementById("codeInput");
-    if(codeInput) codeInput.placeholder = t.codePlaceholder;
-
-    const verifyBtn = document.getElementById("verifyBtn");
-    if(verifyBtn) verifyBtn.textContent = t.verifyBtn;
-
-    // If message already present and matches known patterns, translate it
-    const msg = document.getElementById("message");
-    if(msg && msg.textContent && msg.textContent.trim() !== ""){
-      const txt = msg.textContent;
-      // detect Korean success/fail or English equivalents
-      if(/검진 결과 확인 성공|성공/.test(txt) || /Verified|Successful/.test(txt)){
-        msg.textContent = t.success;
-        msg.style.color = (currentLang === "ko") ? "#00ff99" : "#00ff99";
-      } else if(/존재하지 않는 검진 번호|존재하지/.test(txt) || /Invalid|Invalid Check-up/.test(txt)){
-        msg.textContent = t.fail;
-        msg.style.color = "#ff4444";
-      }
-    }
-  }
-
-  // Observe #message changes (so original verification can set Korean, then we translate to EN)
-  function observeMessageChanges(){
-    const msg = document.getElementById("message");
-    if(!msg) return;
-    const mo = new MutationObserver(()=> {
-      // small delay to let original handler finish
-      setTimeout(()=> applyTexts(), 10);
-    });
-    mo.observe(msg, { childList: true, characterData: true, subtree: true });
-  }
-
-  // Update UI highlights for langSwitcher
-  function highlightSwitcher(){
-    document.querySelectorAll('#langSwitcher span').forEach(el=>{
-      el.style.opacity = (el.dataset.lang === currentLang) ? "1" : "0.6";
-    });
-    document.querySelectorAll('#langOverlay .lang').forEach(el=>{
-      if(el.dataset.lang === currentLang) el.classList.add('selected');
-      else el.classList.remove('selected');
-    });
-  }
-
-  // Called when language chosen
-  function setLanguage(lang, persist=true){
-    currentLang = lang;
-    if(persist) localStorage.setItem(STORAGE_KEY, lang);
-    applyTexts();
-    applyImages();
-    highlightSwitcher();
-  }
-
-  // Show overlay (only when no saved language)
-  const overlay = document.getElementById('langOverlay');
-  function showOverlay(){
-    if(!overlay) return;
-    overlay.style.display = 'flex';
-    // Make sure overlay sits above canvas/matrix but below other important stuff
-    overlay.style.zIndex = 10001;
-  }
-  function hideOverlay(){
-    if(!overlay) return;
-    overlay.style.display = 'none';
-  }
-
-  // Attach event listeners for overlay language buttons
-  document.addEventListener('click', function(e){
-    const target = e.target;
-    // top-right switcher clicks
-    if(target && target.matches && target.matches('#langSwitcher span')){
-      const lang = target.dataset.lang;
-      if(lang) setLanguage(lang);
-      return;
-    }
-    // overlay clicks
-    if(target && target.matches && target.matches('#langOverlay .lang')){
-      const lang = target.dataset.lang;
-      if(lang){
-        setLanguage(lang);
-        hideOverlay();
-      }
-      return;
-    }
-  });
-
-  // Ensure original images' original src saved
-  function saveAllOrigImages(){
-    document.querySelectorAll("#imagesSection img").forEach(img=>{
-      ensureOrigDataAttr(img);
-    });
-  }
-
-  // On load: if language already stored, apply immediately; else show overlay
-  window.addEventListener('load', function(){
-    saveAllOrigImages();
-    observeMessageChanges();
-
-    if(currentLang){
-      // apply saved language
-      setLanguage(currentLang, false); // already loaded from storage; setLanguage won't re-save
-      // ensure overlay hidden
-      hideOverlay();
-    } else {
-      // show overlay to force selection
-      showOverlay();
-      // but also set highlight
-      highlightSwitcher();
-    }
-  });
-
-  // Expose a quick function to toggle language programmatically if needed
-  window.__hc_setLanguage = setLanguage;
-
-  // Also, if user changes language via switcher, ensure images/text update immediately
-  // (Handled by click listener above)
-
-})();
-</script>
-
 </body>
 </html>
