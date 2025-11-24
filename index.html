@@ -96,6 +96,14 @@
     color: #00ff99;
   }
 
+  /* 3x3 경계선 */
+  .cell:nth-child(9n+1) { border-left: 2px solid #00ff99; }
+  .cell:nth-child(-n+9) { border-top: 2px solid #00ff99; }
+  .cell:nth-child(9n) { border-right: 2px solid #00ff99; }
+  .cell:nth-child(n+73) { border-bottom: 2px solid #00ff99; }
+  .cell:nth-child(n+19):nth-child(-n+27),
+  .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #00ff99; }
+
   .prefilled { color: #00aa00; }
 
   .correct-block {
@@ -175,6 +183,7 @@
   }
   #imagesSection img:hover { transform: scale(1.05); }
 
+  /* ✅ 오버레이 (확대 보기용) */
   #overlay {
     display: none;
     position: fixed;
@@ -238,20 +247,19 @@
   }
 </style>
 </head>
-
 <body>
 
-<!-- ✅ 추가된 언어 선택 영역 (원본 코드 앞) -->
+<!-- ✅ 추가된 언어 선택 영역 (원본 코드 앞에 위치) -->
 <div id="langSwitcher">
   <span data-lang="ko">
-    <img src="korea.png" class="flag"> 한국어
+    <img src="korea.png" class="flag" alt="KR"> 한국어
   </span>
   <span data-lang="en">
-    <img src="english.png" class="flag"> English
+    <img src="english.png" class="flag" alt="EN"> English
   </span>
 </div>
 
-<!-- ✅ 여기서부터 원본 코드 (수정 없음) -->
+<!-- 원본 코드 (아래는 사용자 제공 코드 — 로직·배열·검증 등 그대로 유지됨) -->
 <canvas id="matrix"></canvas>
 <div id="intro">온라인 건강 검진 결과 조회 보안 프로그램</div>
 
@@ -278,7 +286,7 @@
 </div>
 
 <script>
-/* ✅ 원본 스크립트 — 절대 수정 없음 */
+// 기존 로직 유지 (원본 그대로)
 let matrixRunning = true;
 setTimeout(() => {
   document.getElementById("intro").style.display = "none";
@@ -288,13 +296,160 @@ setTimeout(() => {
   document.getElementById("instruction").style.display = "block";
 }, 3000);
 
-const puzzle = [...]
-const solution = [...]
-... (원본 JS 그대로 전부 유지)
+const puzzle = [
+  [1,2,3,0,5,6,7,8,9],
+  [4,5,6,7,8,9,1,2,3],
+  [7,8,9,1,2,3,4,5,6],
+  [2,3,4,5,6,7,8,9,0],
+  [5,0,7,8,9,1,2,3,4],
+  [8,9,1,2,3,4,5,6,7],
+  [3,4,5,6,7,8,9,1,2],
+  [6,7,8,0,1,2,3,4,5],
+  [9,1,2,3,4,5,6,7,8]
+];
+const solution = [
+  [1,2,3,4,5,6,7,8,9],
+  [4,5,6,7,8,9,1,2,3],
+  [7,8,9,1,2,3,4,5,6],
+  [2,3,4,5,6,7,8,9,1],
+  [5,6,7,8,9,1,2,3,4],
+  [8,9,1,2,3,4,5,6,7],
+  [3,4,5,6,7,8,9,1,2],
+  [6,7,8,9,1,2,3,4,5],
+  [9,1,2,3,4,5,6,7,8]
+];
+
+const grid = document.getElementById("sudokuGrid");
+function renderSudoku(){
+  grid.innerHTML = "";
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const cell=document.createElement("div");
+      cell.className="cell";
+      if(puzzle[r][c]===0){
+        const input=document.createElement("input");
+        input.maxLength=1;
+        input.dataset.row=r;
+        input.dataset.col=c;
+        input.addEventListener("input", e=>{
+          const v=e.target.value;
+          const rr=+e.target.dataset.row, cc=+e.target.dataset.col;
+          const correct = (v == solution[rr][cc]);
+          const blockRow = Math.floor(rr/3)*3;
+          const blockCol = Math.floor(cc/3)*3;
+          const cells = document.querySelectorAll(".cell");
+
+          for(let i=blockRow;i<blockRow+3;i++){
+            for(let j=blockCol;j<blockCol+3;j++){
+              const index = i*9+j;
+              cells[index].classList.remove("correct-block");
+            }
+          }
+
+          if(correct){
+            for(let i=blockRow;i<blockRow+3;i++){
+              for(let j=blockCol;j<blockCol+3;j++){
+                const index = i*9+j;
+                cells[index].classList.add("correct-block");
+              }
+            }
+            e.target.parentElement.classList.add("correct-cell");
+            e.target.classList.remove("wrong");
+          } else {
+            e.target.parentElement.classList.remove("correct-cell");
+            e.target.classList.add("wrong");
+          }
+
+          const inputs=grid.querySelectorAll("input");
+          let allCorrect=true;
+          inputs.forEach(inp=>{
+            const r=+inp.dataset.row, c=+inp.dataset.col;
+            if(inp.value!=solution[r][c]) allCorrect=false;
+          });
+          if(allCorrect){
+            document.getElementById("instruction").style.display="none";
+            document.getElementById("codeSection").classList.add("show");
+          }
+        });
+        cell.appendChild(input);
+      } else {
+        cell.textContent=puzzle[r][c];
+        cell.classList.add("prefilled");
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+renderSudoku();
+
+// 기존 검증 로직 유지
+document.getElementById("verifyBtn").addEventListener("click",()=>{
+  const inputs=grid.querySelectorAll("input");
+  let correct=true;
+  inputs.forEach(inp=>{
+    const r=+inp.dataset.row, c=+inp.dataset.col;
+    if(inp.value!=solution[r][c]) correct=false;
+  });
+  const code=document.getElementById("codeInput").value;
+  const msg=document.getElementById("message");
+  if(correct && code==="4196"){
+    msg.style.color="#00ff99";
+    msg.textContent="검진 결과 확인 성공!";
+    document.getElementById("imagesSection").style.display="flex";
+  } else {
+    msg.style.color="#ff4444";
+    msg.textContent="존재하지 않는 검진 번호입니다.";
+  }
+});
+
+// 이미지 클릭 확대 기능
+const overlay = document.getElementById("overlay");
+const overlayImg = overlay.querySelector("img");
+const closeBtn = document.getElementById("closeOverlay");
+document.querySelectorAll("#imagesSection img").forEach(img=>{
+  img.addEventListener("click",()=>{
+    overlayImg.src = img.src;
+    overlay.style.display = "flex";
+  });
+});
+closeBtn.addEventListener("click",()=> overlay.style.display="none");
+overlay.addEventListener("click", e=>{
+  if(e.target===overlay) overlay.style.display="none";
+});
+
+// 매트릭스 효과
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+function resizeCanvas(){
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+const letters="01".split("");
+const fontSize=16;
+let columns=Math.floor(canvas.width/fontSize);
+let drops=Array(columns).fill(1);
+function draw(){
+  if(!matrixRunning) return;
+  ctx.fillStyle="rgba(0,0,0,0.05)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#00ff99";
+  ctx.font=fontSize+"px monospace";
+  for(let i=0;i<drops.length;i++){
+    const text=letters[Math.floor(Math.random()*letters.length)];
+    ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+    if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+      drops[i]=0;
+    }
+    drops[i]++;
+  }
+  requestAnimationFrame(draw);
+}
 draw();
 </script>
 
-<!-- ✅ 추가된 언어 전환 스크립트 -->
+<!-- ✅ 추가된 언어 전환 스크립트 (원본 코드에는 간섭하지 않음) -->
 <script>
 let currentLang = localStorage.getItem("lang") || "ko";
 
@@ -303,6 +458,8 @@ const langText = {
     intro: "온라인 건강 검진 결과 조회 보안 프로그램",
     welcome: "나염라님 환영합니다",
     instruction: "검진 번호를 입력해주세요.",
+    codePlaceholder: "검진 번호 입력 (4자리)",
+    verifyBtn: "검진 번호 제출",
     success: "검진 결과 확인 성공!",
     fail: "존재하지 않는 검진 번호입니다."
   },
@@ -310,6 +467,8 @@ const langText = {
     intro: "Online Medical Check Result Security System",
     welcome: "Welcome, Yeom-ra Na",
     instruction: "Please enter your Check-up Code.",
+    codePlaceholder: "Enter Check-up Code (4 digits)",
+    verifyBtn: "Submit Check-up Code",
     success: "Verification Successful!",
     fail: "Invalid Check-up Code."
   }
@@ -318,26 +477,55 @@ const langText = {
 function updateImages() {
   const imgs = document.querySelectorAll("#imagesSection img");
   imgs.forEach(img => {
-    const base = img.src.replace("_english", "");
-    img.src = (currentLang === "en") ? base.replace(".png", "_english.png") : base;
+    // 원본 src에서 이미 _english가 붙어있으면 제거
+    const src = img.getAttribute('src');
+    const withoutEnglish = src.replace("_english", "");
+    if(currentLang === "en"){
+      // 영어일 때: 마지막 .png 앞에 _english 추가
+      // 안전하게 마지막 확장자 찾기
+      const lastDot = withoutEnglish.lastIndexOf('.');
+      if(lastDot !== -1){
+        const newSrc = withoutEnglish.slice(0, lastDot) + "_english" + withoutEnglish.slice(lastDot);
+        img.setAttribute('src', newSrc);
+      } else {
+        img.setAttribute('src', withoutEnglish + "_english");
+      }
+    } else {
+      // 한국어일 때: 원본으로 복원
+      img.setAttribute('src', withoutEnglish);
+    }
   });
 }
 
-function updateLanguageText() {
-  document.getElementById("intro").textContent = langText[currentLang].intro;
-  document.querySelector("#main h1").textContent = langText[currentLang].welcome;
-  document.getElementById("instruction").textContent = langText[currentLang].instruction;
+function updateLanguageText(){
+  // 본문 텍스트 교체
+  const t = langText[currentLang];
+  if(document.getElementById("intro")) document.getElementById("intro").textContent = t.intro;
+  if(document.querySelector("#main h1")) document.querySelector("#main h1").textContent = t.welcome;
+  if(document.getElementById("instruction")) document.getElementById("instruction").textContent = t.instruction;
+  if(document.getElementById("codeInput")) document.getElementById("codeInput").placeholder = t.codePlaceholder;
+  if(document.getElementById("verifyBtn")) document.getElementById("verifyBtn").textContent = t.verifyBtn;
 
   const msg = document.getElementById("message");
-  if (msg.textContent.includes("성공") || msg.textContent.includes("Successful")) {
-    msg.textContent = langText[currentLang].success;
-  } else if (msg.textContent.includes("존재") || msg.textContent.includes("Invalid")) {
-    msg.textContent = langText[currentLang].fail;
+  if(msg && msg.textContent){
+    // 기존 메시지에 따라 적절히 바꿔주기
+    if(msg.textContent.includes("성공") || msg.textContent.includes("Successful")) {
+      msg.textContent = t.success;
+      msg.style.color = (currentLang === "ko") ? "#00ff99" : "#00ff99";
+    } else if(msg.textContent.includes("존재") || msg.textContent.includes("Invalid")) {
+      msg.textContent = t.fail;
+      msg.style.color = "#ff4444";
+    }
   }
 
   updateImages();
+  // 언어 선택 시 하이라이트(선택된 텍스트를 약간 더 밝게)
+  document.querySelectorAll('#langSwitcher span').forEach(el=>{
+    el.style.opacity = (el.dataset.lang === currentLang) ? "1" : "0.6";
+  });
 }
 
+// 클릭 시 언어 변경 (텍스트 자체를 클릭 가능)
 document.querySelectorAll("#langSwitcher span").forEach(btn => {
   btn.addEventListener("click", () => {
     currentLang = btn.dataset.lang;
@@ -346,6 +534,7 @@ document.querySelectorAll("#langSwitcher span").forEach(btn => {
   });
 });
 
+// 최초 적용
 updateLanguageText();
 </script>
 
