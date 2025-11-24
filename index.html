@@ -219,47 +219,9 @@
     #imagesSection img { width: 90%; }
     #overlay img { max-width: 95vw; max-height: 75vh; }
   }
-
-  /* ✅ 추가된 언어 스위처 스타일 */
-  #langSwitcher {
-    position: fixed;
-    top: 10px;
-    right: 15px;
-    display: flex;
-    gap: 12px;
-    z-index: 9999;
-    color: #00ff99;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-  #langSwitcher span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  #langSwitcher span:hover {
-    opacity: 0.7;
-  }
-  #langSwitcher .flag {
-    width: 16px;
-    height: 16px;
-    object-fit: cover;
-  }
 </style>
 </head>
 <body>
-
-<!-- ✅ 추가된 언어 선택 영역 (원본 코드 앞에 위치) -->
-<div id="langSwitcher">
-  <span data-lang="ko">
-    <img src="korea.png" class="flag" alt="KR"> 한국어
-  </span>
-  <span data-lang="en">
-    <img src="english.png" class="flag" alt="EN"> English
-  </span>
-</div>
-
-<!-- 원본 코드 (아래는 사용자 제공 코드 — 로직·배열·검증 등 그대로 유지됨) -->
 <canvas id="matrix"></canvas>
 <div id="intro">온라인 건강 검진 결과 조회 보안 프로그램</div>
 
@@ -280,13 +242,14 @@
   <img src="https://bagjueun307.github.io/health-check/img2.jpg.png" alt="검진 결과 2">
 </div>
 
+<!-- ✅ 이미지 확대용 오버레이 -->
 <div id="overlay">
   <span id="closeOverlay">✕</span>
   <img src="" alt="확대이미지">
 </div>
 
 <script>
-// 기존 로직 유지 (원본 그대로)
+// 기존 로직 유지
 let matrixRunning = true;
 setTimeout(() => {
   document.getElementById("intro").style.display = "none";
@@ -402,7 +365,7 @@ document.getElementById("verifyBtn").addEventListener("click",()=>{
   }
 });
 
-// 이미지 클릭 확대 기능
+// ✅ 이미지 클릭 확대 기능
 const overlay = document.getElementById("overlay");
 const overlayImg = overlay.querySelector("img");
 const closeBtn = document.getElementById("closeOverlay");
@@ -420,16 +383,12 @@ overlay.addEventListener("click", e=>{
 // 매트릭스 효과
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
-function resizeCanvas(){
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 const letters="01".split("");
 const fontSize=16;
-let columns=Math.floor(canvas.width/fontSize);
-let drops=Array(columns).fill(1);
+const columns=canvas.width/fontSize;
+const drops=Array(Math.floor(columns)).fill(1);
 function draw(){
   if(!matrixRunning) return;
   ctx.fillStyle="rgba(0,0,0,0.05)";
@@ -449,93 +408,271 @@ function draw(){
 draw();
 </script>
 
-<!-- ✅ 추가된 언어 전환 스크립트 (원본 코드에는 간섭하지 않음) -->
+<!-- ============================
+     추가된 코드 (여기부터 — 원본 코드는 절대 수정하지 않음)
+     - 초기 언어 선택 오버레이
+     - 오른쪽 상단 언어 선택 (항상 표시)
+     - 언어 적용(텍스트 치환 + 이미지 _english 자동 변환)
+     - 메시지 변경 감지 및 즉시 번역
+   ============================ -->
+<style>
+  /* 언어 스위처 (우측 상단) */
+  #langSwitcher {
+    position: fixed;
+    top: 10px;
+    right: 15px;
+    display: flex;
+    gap: 12px;
+    z-index: 10002;
+    color: #00ff99;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  #langSwitcher span { display:flex; align-items:center; gap:6px; padding:2px 4px; }
+  #langSwitcher span:hover { opacity:0.8; }
+
+  /* 초기 언어 선택 오버레이 (매트릭스 배경 그대로 보이도록 투명 처리) */
+  #langOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    pointer-events: auto;
+  }
+  #langOverlay .panel {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(0,255,153,0.06);
+    padding: 18px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    display:flex;
+    gap:18px;
+    align-items:center;
+    justify-content:center;
+  }
+  #langOverlay .lang {
+    color: #00ff99;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #langOverlay .lang:hover { opacity: 0.85; transform: translateY(-2px); }
+  /* 선택 시 강조 */
+  #langOverlay .selected { box-shadow: 0 0 14px #00ff99; }
+  /* 모바일 대응 */
+  @media (max-width:480px){
+    #langOverlay .panel { gap:10px; padding:12px; }
+    #langOverlay .lang { font-size:0.9rem; padding:5px 8px; }
+    #langSwitcher { font-size:0.82rem; top:8px; right:10px; gap:8px; }
+  }
+</style>
+
+<!-- 오른쪽 상단 언어 토글 (항상 노출) -->
+<div id="langSwitcher" aria-hidden="false">
+  <span data-lang="ko" id="ls-ko">한국어</span>
+  <span data-lang="en" id="ls-en">English</span>
+</div>
+
+<!-- 초기 언어 선택 오버레이 -->
+<div id="langOverlay" role="dialog" aria-modal="true" style="display:none;">
+  <div class="panel" role="group" aria-label="언어 선택">
+    <div class="lang" data-lang="ko">한국어</div>
+    <div class="lang" data-lang="en">English</div>
+  </div>
+</div>
+
 <script>
-let currentLang = localStorage.getItem("lang") || "ko";
+(function(){
+  // 안전한 네임스페이스로 추가 스크립트 실행 (원본 변수와 충돌 피함)
+  const STORAGE_KEY = "hc_lang_v1";
+  const defaultLang = localStorage.getItem(STORAGE_KEY) || null; // null -> show overlay
+  let currentLang = defaultLang || null;
 
-const langText = {
-  ko: {
-    intro: "온라인 건강 검진 결과 조회 보안 프로그램",
-    welcome: "나염라님 환영합니다",
-    instruction: "검진 번호를 입력해주세요.",
-    codePlaceholder: "검진 번호 입력 (4자리)",
-    verifyBtn: "검진 번호 제출",
-    success: "검진 결과 확인 성공!",
-    fail: "존재하지 않는 검진 번호입니다."
-  },
-  en: {
-    intro: "Online Medical Check Result Security System",
-    welcome: "Welcome, Yeom-ra Na",
-    instruction: "Please enter your Check-up Code.",
-    codePlaceholder: "Enter Check-up Code (4 digits)",
-    verifyBtn: "Submit Check-up Code",
-    success: "Verification Successful!",
-    fail: "Invalid Check-up Code."
+  // 번역 매핑 (네가 승인한 문구)
+  const translations = {
+    ko: {
+      intro: "온라인 건강 검진 결과 조회 보안 프로그램",
+      welcome: "나염라님 환영합니다",
+      instruction: "검진 번호를 입력해주세요.",
+      codePlaceholder: "검진 번호 입력 (4자리)",
+      verifyBtn: "검진 번호 제출",
+      success: "검진 결과 확인 성공!",
+      fail: "존재하지 않는 검진 번호입니다."
+    },
+    en: {
+      intro: "Online Health Check-up Result Secure Viewer",
+      welcome: "Welcome, Yeom-ra Na",
+      instruction: "Please enter your Check-up Code.",
+      codePlaceholder: "Enter Check-up Code (4 digits)",
+      verifyBtn: "Submit Code",
+      success: "Check-up Result Verified!",
+      fail: "Invalid Check-up Code"
+    }
+  };
+
+  // helper: insert _english before last dot in filename
+  function englishifySrc(src){
+    if(!src) return src;
+    const without = src.replace("_english", ""); // remove existing if any
+    const lastDot = without.lastIndexOf('.');
+    if(lastDot === -1) return without + "_english";
+    return without.slice(0,lastDot) + "_english" + without.slice(lastDot);
   }
-};
 
-function updateImages() {
-  const imgs = document.querySelectorAll("#imagesSection img");
-  imgs.forEach(img => {
-    // 원본 src에서 이미 _english가 붙어있으면 제거
-    const src = img.getAttribute('src');
-    const withoutEnglish = src.replace("_english", "");
-    if(currentLang === "en"){
-      // 영어일 때: 마지막 .png 앞에 _english 추가
-      // 안전하게 마지막 확장자 찾기
-      const lastDot = withoutEnglish.lastIndexOf('.');
-      if(lastDot !== -1){
-        const newSrc = withoutEnglish.slice(0, lastDot) + "_english" + withoutEnglish.slice(lastDot);
-        img.setAttribute('src', newSrc);
+  // Save original src in data attribute for safe restore
+  function ensureOrigDataAttr(img){
+    if(!img.dataset.origSrc){
+      img.dataset.origSrc = img.getAttribute('src') || "";
+    }
+  }
+
+  // Apply images according to currentLang
+  function applyImages(){
+    const imgs = document.querySelectorAll("#imagesSection img");
+    imgs.forEach(img=>{
+      ensureOrigDataAttr(img);
+      if(currentLang === "en"){
+        img.src = englishifySrc(img.dataset.origSrc);
       } else {
-        img.setAttribute('src', withoutEnglish + "_english");
+        img.src = img.dataset.origSrc;
       }
-    } else {
-      // 한국어일 때: 원본으로 복원
-      img.setAttribute('src', withoutEnglish);
-    }
-  });
-}
+    });
+  }
 
-function updateLanguageText(){
-  // 본문 텍스트 교체
-  const t = langText[currentLang];
-  if(document.getElementById("intro")) document.getElementById("intro").textContent = t.intro;
-  if(document.querySelector("#main h1")) document.querySelector("#main h1").textContent = t.welcome;
-  if(document.getElementById("instruction")) document.getElementById("instruction").textContent = t.instruction;
-  if(document.getElementById("codeInput")) document.getElementById("codeInput").placeholder = t.codePlaceholder;
-  if(document.getElementById("verifyBtn")) document.getElementById("verifyBtn").textContent = t.verifyBtn;
+  // Apply text translations where applicable (non-destructive: only sets visible text)
+  function applyTexts(){
+    const t = translations[currentLang] || translations.ko;
+    const elIntro = document.getElementById("intro");
+    if(elIntro) elIntro.textContent = t.intro;
 
-  const msg = document.getElementById("message");
-  if(msg && msg.textContent){
-    // 기존 메시지에 따라 적절히 바꿔주기
-    if(msg.textContent.includes("성공") || msg.textContent.includes("Successful")) {
-      msg.textContent = t.success;
-      msg.style.color = (currentLang === "ko") ? "#00ff99" : "#00ff99";
-    } else if(msg.textContent.includes("존재") || msg.textContent.includes("Invalid")) {
-      msg.textContent = t.fail;
-      msg.style.color = "#ff4444";
+    const h1 = document.querySelector("#main h1");
+    if(h1) h1.textContent = t.welcome;
+
+    const instr = document.getElementById("instruction");
+    if(instr) instr.textContent = t.instruction;
+
+    const codeInput = document.getElementById("codeInput");
+    if(codeInput) codeInput.placeholder = t.codePlaceholder;
+
+    const verifyBtn = document.getElementById("verifyBtn");
+    if(verifyBtn) verifyBtn.textContent = t.verifyBtn;
+
+    // If message already present and matches known patterns, translate it
+    const msg = document.getElementById("message");
+    if(msg && msg.textContent && msg.textContent.trim() !== ""){
+      const txt = msg.textContent;
+      // detect Korean success/fail or English equivalents
+      if(/검진 결과 확인 성공|성공/.test(txt) || /Verified|Successful/.test(txt)){
+        msg.textContent = t.success;
+        msg.style.color = (currentLang === "ko") ? "#00ff99" : "#00ff99";
+      } else if(/존재하지 않는 검진 번호|존재하지/.test(txt) || /Invalid|Invalid Check-up/.test(txt)){
+        msg.textContent = t.fail;
+        msg.style.color = "#ff4444";
+      }
     }
   }
 
-  updateImages();
-  // 언어 선택 시 하이라이트(선택된 텍스트를 약간 더 밝게)
-  document.querySelectorAll('#langSwitcher span').forEach(el=>{
-    el.style.opacity = (el.dataset.lang === currentLang) ? "1" : "0.6";
-  });
-}
+  // Observe #message changes (so original verification can set Korean, then we translate to EN)
+  function observeMessageChanges(){
+    const msg = document.getElementById("message");
+    if(!msg) return;
+    const mo = new MutationObserver(()=> {
+      // small delay to let original handler finish
+      setTimeout(()=> applyTexts(), 10);
+    });
+    mo.observe(msg, { childList: true, characterData: true, subtree: true });
+  }
 
-// 클릭 시 언어 변경 (텍스트 자체를 클릭 가능)
-document.querySelectorAll("#langSwitcher span").forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentLang = btn.dataset.lang;
-    localStorage.setItem("lang", currentLang);
-    updateLanguageText();
-  });
-});
+  // Update UI highlights for langSwitcher
+  function highlightSwitcher(){
+    document.querySelectorAll('#langSwitcher span').forEach(el=>{
+      el.style.opacity = (el.dataset.lang === currentLang) ? "1" : "0.6";
+    });
+    document.querySelectorAll('#langOverlay .lang').forEach(el=>{
+      if(el.dataset.lang === currentLang) el.classList.add('selected');
+      else el.classList.remove('selected');
+    });
+  }
 
-// 최초 적용
-updateLanguageText();
+  // Called when language chosen
+  function setLanguage(lang, persist=true){
+    currentLang = lang;
+    if(persist) localStorage.setItem(STORAGE_KEY, lang);
+    applyTexts();
+    applyImages();
+    highlightSwitcher();
+  }
+
+  // Show overlay (only when no saved language)
+  const overlay = document.getElementById('langOverlay');
+  function showOverlay(){
+    if(!overlay) return;
+    overlay.style.display = 'flex';
+    // Make sure overlay sits above canvas/matrix but below other important stuff
+    overlay.style.zIndex = 10001;
+  }
+  function hideOverlay(){
+    if(!overlay) return;
+    overlay.style.display = 'none';
+  }
+
+  // Attach event listeners for overlay language buttons
+  document.addEventListener('click', function(e){
+    const target = e.target;
+    // top-right switcher clicks
+    if(target && target.matches && target.matches('#langSwitcher span')){
+      const lang = target.dataset.lang;
+      if(lang) setLanguage(lang);
+      return;
+    }
+    // overlay clicks
+    if(target && target.matches && target.matches('#langOverlay .lang')){
+      const lang = target.dataset.lang;
+      if(lang){
+        setLanguage(lang);
+        hideOverlay();
+      }
+      return;
+    }
+  });
+
+  // Ensure original images' original src saved
+  function saveAllOrigImages(){
+    document.querySelectorAll("#imagesSection img").forEach(img=>{
+      ensureOrigDataAttr(img);
+    });
+  }
+
+  // On load: if language already stored, apply immediately; else show overlay
+  window.addEventListener('load', function(){
+    saveAllOrigImages();
+    observeMessageChanges();
+
+    if(currentLang){
+      // apply saved language
+      setLanguage(currentLang, false); // already loaded from storage; setLanguage won't re-save
+      // ensure overlay hidden
+      hideOverlay();
+    } else {
+      // show overlay to force selection
+      showOverlay();
+      // but also set highlight
+      highlightSwitcher();
+    }
+  });
+
+  // Expose a quick function to toggle language programmatically if needed
+  window.__hc_setLanguage = setLanguage;
+
+  // Also, if user changes language via switcher, ensure images/text update immediately
+  // (Handled by click listener above)
+
+})();
 </script>
 
 </body>
