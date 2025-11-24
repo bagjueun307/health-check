@@ -108,7 +108,6 @@
   }
   @keyframes blink { from { opacity: 1; } to { opacity: 0.6; } }
 
-  /* ... 이하 기존 CSS 그대로 유지 ... */
   #sudokuGrid { margin:20px auto; display:grid; grid-template-columns:repeat(9,1fr); width:min(90vw,380px); aspect-ratio:1/1; border:3px solid #00ff99; box-sizing:border-box; }
   .cell { border:1px solid #007000; font-weight:bold; font-size:clamp(14px,2.5vw,20px); color:#00e000; background-color:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; transition:background-color 0.4s,box-shadow 0.4s; box-sizing:border-box; }
   .cell input { width:100%; height:100%; font-size:clamp(14px,3vw,20px); text-align:center; border:none; outline:none; background:transparent; color:#00ff99; }
@@ -175,15 +174,14 @@
 </div>
 
 <script>
-// 현재 선택된 언어 상태
+// ====== 언어 선택 로직 ======
 let currentLang = "ko";
 
-// 언어 선택 후 메인 시작
 function startMainFlow(){
   document.getElementById("languageOverlay").style.display="none";
   document.getElementById("languageSelect").style.display="flex";
 
-  // 기존 로직 유지
+  // 기존 로직 시작
   let matrixRunning = true;
   setTimeout(() => {
     document.getElementById("intro").style.display = "none";
@@ -193,25 +191,166 @@ function startMainFlow(){
     document.getElementById("instruction").style.display = "block";
   }, 3000);
 
-  // 기존 Sudoku 및 검증, 이미지 로직 그대로 실행
-  // ... 여기서 기존 코드 삽입 ...
+  // ===== 기존 Sudoku, 검증, 이미지, 매트릭스 코드 시작 =====
+  const puzzle = [
+    [1,2,3,0,5,6,7,8,9],
+    [4,5,6,7,8,9,1,2,3],
+    [7,8,9,1,2,3,4,5,6],
+    [2,3,4,5,6,7,8,9,0],
+    [5,0,7,8,9,1,2,3,4],
+    [8,9,1,2,3,4,5,6,7],
+    [3,4,5,6,7,8,9,1,2],
+    [6,7,8,0,1,2,3,4,5],
+    [9,1,2,3,4,5,6,7,8]
+  ];
+  const solution = [
+    [1,2,3,4,5,6,7,8,9],
+    [4,5,6,7,8,9,1,2,3],
+    [7,8,9,1,2,3,4,5,6],
+    [2,3,4,5,6,7,8,9,1],
+    [5,6,7,8,9,1,2,3,4],
+    [8,9,1,2,3,4,5,6,7],
+    [3,4,5,6,7,8,9,1,2],
+    [6,7,8,9,1,2,3,4,5],
+    [9,1,2,3,4,5,6,7,8]
+  ];
+
+  const grid = document.getElementById("sudokuGrid");
+  function renderSudoku(){
+    grid.innerHTML = "";
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        const cell=document.createElement("div");
+        cell.className="cell";
+        if(puzzle[r][c]===0){
+          const input=document.createElement("input");
+          input.maxLength=1;
+          input.dataset.row=r;
+          input.dataset.col=c;
+          input.addEventListener("input", e=>{
+            const v=e.target.value;
+            const rr=+e.target.dataset.row, cc=+e.target.dataset.col;
+            const correct = (v == solution[rr][cc]);
+            const blockRow = Math.floor(rr/3)*3;
+            const blockCol = Math.floor(cc/3)*3;
+            const cells = document.querySelectorAll(".cell");
+            for(let i=blockRow;i<blockRow+3;i++){
+              for(let j=blockCol;j<blockCol+3;j++){
+                const index = i*9+j;
+                cells[index].classList.remove("correct-block");
+              }
+            }
+            if(correct){
+              for(let i=blockRow;i<blockRow+3;i++){
+                for(let j=blockCol;j<blockCol+3;j++){
+                  const index = i*9+j;
+                  cells[index].classList.add("correct-block");
+                }
+              }
+              e.target.parentElement.classList.add("correct-cell");
+              e.target.classList.remove("wrong");
+            } else {
+              e.target.parentElement.classList.remove("correct-cell");
+              e.target.classList.add("wrong");
+            }
+            const inputs=grid.querySelectorAll("input");
+            let allCorrect=true;
+            inputs.forEach(inp=>{
+              const r=+inp.dataset.row, c=+inp.dataset.col;
+              if(inp.value!=solution[r][c]) allCorrect=false;
+            });
+            if(allCorrect){
+              document.getElementById("instruction").style.display="none";
+              document.getElementById("codeSection").classList.add("show");
+            }
+          });
+          cell.appendChild(input);
+        } else {
+          cell.textContent=puzzle[r][c];
+          cell.classList.add("prefilled");
+        }
+        grid.appendChild(cell);
+      }
+    }
+  }
+  renderSudoku();
+
+  document.getElementById("verifyBtn").addEventListener("click",()=>{
+    const inputs=grid.querySelectorAll("input");
+    let correct=true;
+    inputs.forEach(inp=>{
+      const r=+inp.dataset.row, c=+inp.dataset.col;
+      if(inp.value!=solution[r][c]) correct=false;
+    });
+    const code=document.getElementById("codeInput").value;
+    const msg=document.getElementById("message");
+    if(correct && code==="4196"){
+      msg.style.color="#00ff99";
+      msg.textContent = currentLang=="ko" ? "검진 결과 확인 성공!" : "Check-up result confirmed!";
+      document.getElementById("imagesSection").style.display="flex";
+    } else {
+      msg.style.color="#ff4444";
+      msg.textContent = currentLang=="ko" ? "존재하지 않는 검진 번호입니다." : "Invalid Check-up Code.";
+    }
+  });
+
+  // 이미지 확대
+  const overlay = document.getElementById("overlay");
+  const overlayImg = overlay.querySelector("img");
+  const closeBtn = document.getElementById("closeOverlay");
+  document.querySelectorAll("#imagesSection img").forEach(img=>{
+    img.addEventListener("click",()=>{
+      overlayImg.src = img.src;
+      overlay.style.display = "flex";
+    });
+  });
+  closeBtn.addEventListener("click",()=> overlay.style.display="none");
+  overlay.addEventListener("click", e=>{
+    if(e.target===overlay) overlay.style.display="none";
+  });
+
+  // 매트릭스
+  const canvas=document.getElementById("matrix");
+  const ctx=canvas.getContext("2d");
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  const letters="01".split("");
+  const fontSize=16;
+  const columns=canvas.width/fontSize;
+  const drops=Array(Math.floor(columns)).fill(1);
+  function draw(){
+    if(!matrixRunning) return;
+    ctx.fillStyle="rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#00ff99";
+    ctx.font=fontSize+"px monospace";
+    for(let i=0;i<drops.length;i++){
+      const text=letters[Math.floor(Math.random()*letters.length)];
+      ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+      if(drops[i]*fontSize>canvas.height && Math.random()>0.975){
+        drops[i]=0;
+      }
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
 
-// 언어 선택 클릭
+// ===== 이벤트 =====
+// 처음 언어 선택
 document.querySelectorAll(".langChoice").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     currentLang = btn.dataset.lang;
-    // intro 문구 변경 (언어별)
     document.getElementById("intro").textContent = currentLang=="ko" ? "온라인 건강 검진 결과 조회 보안 프로그램" : "Online Health Check Result Security Program";
     startMainFlow();
   });
 });
 
-// 상단 언어 변경 클릭
+// 상단 언어 변경
 document.querySelectorAll(".langBtn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     currentLang = btn.dataset.lang;
-    // 기존 텍스트만 언어 변경
     document.getElementById("intro").textContent = currentLang=="ko" ? "온라인 건강 검진 결과 조회 보안 프로그램" : "Online Health Check Result Security Program";
     document.querySelector("#main h1").textContent = currentLang=="ko" ? "나염라님 환영합니다" : "Welcome Yeom-ra Na";
     document.getElementById("instruction").textContent = currentLang=="ko" ? "검진 번호를 입력해주세요." : "Please enter your Check-up Code.";
