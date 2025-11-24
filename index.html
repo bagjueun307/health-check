@@ -104,8 +104,8 @@
   <div id="sudokuGrid"></div>
   <div id="codeSection">
     <p id="message"></p>
-    <input type="text" id="codeInput" maxlength="4" placeholder="검진 번호 입력 (4자리)">
-    <button id="verifyBtn">검진 번호 제출</button>
+    <input type="text" id="codeInput" maxlength="4" placeholder="">
+    <button id="verifyBtn"></button>
   </div>
 </div>
 
@@ -138,6 +138,9 @@ function setLanguage(selected){
   document.getElementById("img1").alt = lang==="ko"?"검진 결과 1":"Check-up Result 1";
   document.getElementById("img2").alt = lang==="ko"?"검진 결과 2":"Check-up Result 2";
 
+  document.getElementById("codeInput").placeholder = lang==="ko"?"검진 번호 입력 (4자리)":"Enter check-up code (4 digits)";
+  document.getElementById("verifyBtn").textContent = lang==="ko"?"검진 번호 제출":"Submit Code";
+
   setTimeout(()=>{
     document.getElementById("intro").style.display="none";
     document.getElementById("main").style.display="block";
@@ -145,7 +148,7 @@ function setLanguage(selected){
     document.getElementById("langTop").style.display="none"; // 스도쿠 중 숨김
     matrixRunning=false; 
     document.getElementById("matrix").style.opacity="0";
-  },3500);
+  },2000); // ⬅ 인트로 2초
 }
 
 document.getElementById("korBtn").addEventListener("click",()=>setLanguage("ko"));
