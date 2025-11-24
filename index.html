@@ -5,52 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>건강검진 결과 보안 프로그램</title>
 <style>
-  body {margin:0; font-family:'Malgun Gothic',sans-serif; background:black; color:#00ff99; overflow-x:hidden; overflow-y:auto; text-align:center; min-height:100vh;}
-  canvas {position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:-1; background:black; transition:opacity 2s ease;}
-  #langSelect {position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#00ff99; text-align:center; font-size:1.2rem;}
-  #langSelect button {margin:0 10px; padding:8px 12px; font-size:1rem; cursor:pointer; background:#000; color:#00ff99; border:1px solid #00a000; border-radius:5px; box-shadow:0 0 10px #00e000;}
+  body {margin:0;font-family:'Malgun Gothic',sans-serif;background:black;color:#00ff99;overflow-x:hidden;overflow-y:auto;text-align:center;min-height:100vh;}
+  canvas {position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;background:black;transition:opacity 2s ease;}
+  #langSelect {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#00ff99;text-align:center;font-size:1.2rem;}
+  #langSelect button {margin:0 10px;padding:8px 12px;font-size:1rem;cursor:pointer;background:#000;color:#00ff99;border:1px solid #00a000;border-radius:5px;box-shadow:0 0 10px #00e000;}
   #langSelect button:hover{background:#008000;}
-  .langTop {position:fixed; top:5px; right:5px; display:flex; gap:5px; font-size:0.9rem; z-index:999;}
-  .langTop button {padding:3px 6px; font-size:0.8rem; cursor:pointer; background:#000; color:#00ff99; border:1px solid #00a000; border-radius:3px; box-shadow:0 0 6px #00e000;}
+  .langTop {position:fixed;top:5px;right:5px;display:flex;gap:5px;font-size:0.9rem;z-index:999;display:none;}
+  .langTop button {padding:3px 6px;font-size:0.8rem;cursor:pointer;background:#000;color:#00ff99;border:1px solid #00a000;border-radius:3px;box-shadow:0 0 6px #00e000;}
   .langTop button:hover { background:#008000;}
-  #intro {font-size:1.3rem; color:#00ff99; text-shadow:0 0 10px #00ff99; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); display:none;}
-  .container {background-color:rgba(0,0,0,0.8); padding:20px; border-radius:10px; max-width:800px; margin:40px auto; border:2px solid #00a000; box-shadow:0 0 18px #00e000; display:none;}
-  h1,p{text-shadow:0 0 5px #00ff99; margin:10px 0;}
-  #instruction{font-size:1.1rem; margin-bottom:10px; color:#00ff99; display:none; text-shadow:0 0 10px #00ff99; animation:blink 1.5s infinite alternate;}
+  #intro {font-size:1.3rem;color:#00ff99;text-shadow:0 0 10px #00ff99;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);display:none;}
+  .container {background-color:rgba(0,0,0,0.8);padding:20px;border-radius:10px;max-width:800px;margin:40px auto;border:2px solid #00a000;box-shadow:0 0 18px #00e000;display:none;}
+  h1,p{text-shadow:0 0 5px #00ff99;margin:10px 0;}
+  #instruction{font-size:1.1rem;margin-bottom:10px;color:#00ff99;display:none;text-shadow:0 0 10px #00ff99;animation:blink 1.5s infinite alternate;}
   @keyframes blink{from{opacity:1;}to{opacity:0.6;}}
-  #sudokuGrid{margin:20px auto; display:grid; grid-template-columns:repeat(9,1fr); width:min(90vw,380px); aspect-ratio:1/1; border:3px solid #00ff99; box-sizing:border-box;}
-  .cell{border:1px solid #007000; font-weight:bold; font-size:clamp(14px,2.5vw,20px); color:#00e000; background-color:rgba(0,0,0,0.9); display:flex; justify-content:center; align-items:center; transition:background-color 0.4s,box-shadow 0.4s; box-sizing:border-box;}
-  .cell input{width:100%; height:100%; font-size:clamp(14px,3vw,20px); text-align:center; border:none; outline:none; background:transparent; color:#00ff99;}
+  #sudokuGrid{margin:20px auto;display:grid;grid-template-columns:repeat(9,1fr);width:min(90vw,380px);aspect-ratio:1/1;border:3px solid #00ff99;box-sizing:border-box;}
+  .cell{border:1px solid #007000;font-weight:bold;font-size:clamp(14px,2.5vw,20px);color:#00e000;background-color:rgba(0,0,0,0.9);display:flex;justify-content:center;align-items:center;transition:background-color 0.4s,box-shadow 0.4s;box-sizing:border-box;}
+  .cell input{width:100%;height:100%;font-size:clamp(14px,3vw,20px);text-align:center;border:none;outline:none;background:transparent;color:#00ff99;}
   .cell:nth-child(9n+1){border-left:2px solid #00ff99;}
   .cell:nth-child(-n+9){border-top:2px solid #00ff99;}
   .cell:nth-child(9n){border-right:2px solid #00ff99;}
   .cell:nth-child(n+73){border-bottom:2px solid #00ff99;}
   .cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #00ff99;}
   .prefilled{color:#00aa00;}
-  .correct-block{background-color:rgba(0,255,100,0.15)!important; box-shadow:0 0 10px #00ff99 inset;}
-  .correct-cell{background-color:rgba(0,255,150,0.35)!important; box-shadow:0 0 15px #00ff99 inset;}
-  .wrong{color:#ff4444!important; text-shadow:0 0 8px #ff0000;}
-  #message{min-height:20px; margin-top:10px; font-weight:bold;}
-  #codeSection{display:none; opacity:0; transition:opacity 1s ease;}
-  #codeSection.show{display:block; opacity:1;}
-  #codeInput{width:150px; padding:8px; margin-top:10px; font-size:18px; text-align:center; border:2px solid #00a000; border-radius:5px; background-color:#000; color:#00ff99; box-shadow:0 0 10px #00e000;}
-  #verifyBtn{display:block; margin:10px auto 0; font-size:18px; padding:7px 15px; cursor:pointer; background:#008000; color:white; border:1px solid #00a000; border-radius:5px; box-shadow:0 0 10px #00e000;}
+  .correct-block{background-color:rgba(0,255,100,0.15)!important;box-shadow:0 0 10px #00ff99 inset;}
+  .correct-cell{background-color:rgba(0,255,150,0.35)!important;box-shadow:0 0 15px #00ff99 inset;}
+  .wrong{color:#ff4444!important;text-shadow:0 0 8px #ff0000;}
+  #message{min-height:20px;margin-top:10px;font-weight:bold;}
+  #codeSection{display:none;opacity:0;transition:opacity 1s ease;}
+  #codeSection.show{display:block;opacity:1;}
+  #codeInput{width:150px;padding:8px;margin-top:10px;font-size:18px;text-align:center;border:2px solid #00a000;border-radius:5px;background-color:#000;color:#00ff99;box-shadow:0 0 10px #00e000;}
+  #verifyBtn{display:block;margin:10px auto 0;font-size:18px;padding:7px 15px;cursor:pointer;background:#008000;color:white;border:1px solid #00a000;border-radius:5px;box-shadow:0 0 10px #00e000;}
   #verifyBtn:hover{background:#00c000;}
-  #imagesSection{margin-top:30px; display:none; justify-content:center; gap:15px; flex-wrap:wrap;}
-  #imagesSection img{width:45%; border-radius:10px; box-shadow:0 0 15px #00ff99; cursor:pointer; transition:transform 0.3s;}
+  #imagesSection{margin-top:30px;display:none;justify-content:center;gap:15px;flex-wrap:wrap;}
+  #imagesSection img{width:45%;border-radius:10px;box-shadow:0 0 15px #00ff99;cursor:pointer;transition:transform 0.3s;}
   #imagesSection img:hover{transform:scale(1.05);}
-  #overlay{display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:9999; flex-direction:column;}
-  #overlay img{max-width:90vw; max-height:80vh; border-radius:10px; box-shadow:0 0 20px #00ff99;}
-  #closeOverlay{position:absolute; top:15px; right:20px; font-size:28px; font-weight:bold; color:#00ff99; cursor:pointer; text-shadow:0 0 10px #00ff99;}
-  #overlayText{color:#00ff99; margin-top:10px;}
-  @media(max-width:480px){#sudokuGrid{width:95vw; max-width:360px;} .container{padding:15px; margin:20px auto;} #imagesSection img{width:90%;} #overlay img{max-width:95vw; max-height:75vh;} .langTop{font-size:0.7rem; gap:3px; top:3px; right:3px;} .langTop button{padding:2px 4px; font-size:0.6rem;}}
+  #overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);justify-content:center;align-items:center;z-index:9999;flex-direction:column;}
+  #overlay img{max-width:90vw;max-height:80vh;border-radius:10px;box-shadow:0 0 20px #00ff99;}
+  #closeOverlay{position:absolute;top:15px;right:20px;font-size:28px;font-weight:bold;color:#00ff99;cursor:pointer;text-shadow:0 0 10px #00ff99;}
+  @media(max-width:480px){#sudokuGrid{width:95vw;max-width:360px;} .container{padding:15px;margin:20px auto;} #imagesSection img{width:90%;} #overlay img{max-width:95vw;max-height:75vh;} .langTop{font-size:0.7rem;gap:3px;top:3px;right:3px;} .langTop button{padding:2px 4px;font-size:0.6rem;}}
 </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
 
-<!-- 언어 선택 화면 -->
+<!-- 언어 선택 -->
 <div id="langSelect">
   <p>언어를 선택해주세요 / Please select a language</p>
   <button id="korBtn">한국어</button>
@@ -58,7 +57,7 @@
 </div>
 
 <!-- 상단 언어 변경 -->
-<div class="langTop" id="langTop" style="display:none;">
+<div class="langTop" id="langTop">
   <button id="topKor">한국어</button>
   <button id="topEng">English</button>
 </div>
@@ -71,7 +70,6 @@
   <h1 id="welcome">나염라님 환영합니다</h1>
   <p id="instruction">검진 번호를 입력해주세요.</p>
   <div id="sudokuGrid"></div>
-
   <div id="codeSection">
     <p id="message"></p>
     <input type="text" id="codeInput" maxlength="4" placeholder="검진 번호 입력 (4자리)" />
@@ -89,22 +87,30 @@
 <div id="overlay">
   <span id="closeOverlay">✕</span>
   <img src="" alt="확대이미지">
-  <p id="overlayText"></p>
 </div>
 
 <script>
 // ===== 언어 선택 =====
-let lang="ko"; 
+let lang = "ko"; // 기본 한국어
+const imagesKo = ["https://bagjueun307.github.io/health-check/img1.jpg.png","https://bagjueun307.github.io/health-check/img2.jpg.png"];
+const imagesEn = ["https://raw.githubusercontent.com/bagjueun307/health-check/main/%EA%B1%B4%EA%B0%95%EA%B2%80%EC%82%AC%EA%B2%B0%EA%B3%BC%EC%A7%80_%EC%98%81%EC%96%B41.png",
+                  "https://raw.githubusercontent.com/bagjueun307/health-check/main/%EA%B1%B4%EA%B0%95%EA%B2%80%EC%82%AC%EA%B2%B0%EA%B3%BC%EC%A7%80_%EC%98%81%EC%96%B42.png"];
+
 function setLanguage(selected){
-  lang=selected;
+  lang = selected;
   document.getElementById("langTop").style.display="flex";
   document.getElementById("langSelect").style.display="none";
   document.getElementById("intro").style.display="block";
-  document.getElementById("intro").textContent=lang==="ko"?"온라인 건강 검진 결과 조회 보안 프로그램":"Online Health Check-up Result Security Program";
-  document.getElementById("img1").alt=lang==="ko"?"검진 결과 1":"Check-up Result 1";
-  document.getElementById("img2").alt=lang==="ko"?"검진 결과 2":"Check-up Result 2";
-  document.getElementById("welcome").textContent=lang==="ko"?"나염라님 환영합니다":"Welcome Yeom-ra Na";
-  document.getElementById("instruction").textContent=lang==="ko"?"검진 번호를 입력해주세요.":"Please enter your check-up code.";
+  document.getElementById("intro").textContent = lang==="ko" ? "온라인 건강 검진 결과 조회 보안 프로그램" : "Online Health Check-up Result Security Program";
+  document.getElementById("welcome").textContent = lang==="ko" ? "나염라님 환영합니다" : "Welcome Yeom-ra Na";
+  document.getElementById("instruction").textContent = lang==="ko" ? "검진 번호를 입력해주세요." : "Please enter your check-up code.";
+
+  // 이미지 교체
+  document.getElementById("img1").src = lang==="ko" ? imagesKo[0] : imagesEn[0];
+  document.getElementById("img2").src = lang==="ko" ? imagesKo[1] : imagesEn[1];
+  document.getElementById("img1").alt = lang==="ko" ? "검진 결과 1" : "Check-up Result 1";
+  document.getElementById("img2").alt = lang==="ko" ? "검진 결과 2" : "Check-up Result 2";
+
   setTimeout(()=>{ 
     document.getElementById("intro").style.display="none"; 
     document.getElementById("main").style.display="block"; 
@@ -113,6 +119,8 @@ function setLanguage(selected){
     document.getElementById("instruction").style.display="block"; 
   },3000);
 }
+
+// 이벤트
 document.getElementById("korBtn").addEventListener("click",()=>setLanguage("ko"));
 document.getElementById("engBtn").addEventListener("click",()=>setLanguage("eng"));
 document.getElementById("topKor").addEventListener("click",()=>setLanguage("ko"));
@@ -141,10 +149,9 @@ function draw(){
 }
 draw();
 
-// ===== 스도쿠, 검증 로직 (기존 코드 그대로 유지) =====
+// ===== 스도쿠, 검증 로직 (기존 코드 그대로) =====
 const puzzle=[[1,2,3,0,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,4,5,6,7,8,9,0],[5,0,7,8,9,1,2,3,4],[8,9,1,2,3,4,5,6,7],[3,4,5,6,7,8,9,1,2],[6,7,8,0,1,2,3,4,5],[9,1,2,3,4,5,6,7,8]];
 const solution=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,4,5,6,7,8,9,1],[5,6,7,8,9,1,2,3,4],[8,9,1,2,3,4,5,6,7],[3,4,5,6,7,8,9,1,2],[6,7,8,9,1,2,3,4,5],[9,1,2,3,4,5,6,7,8]];
-
 const grid=document.getElementById("sudokuGrid");
 function renderSudoku(){
   grid.innerHTML="";
@@ -175,6 +182,7 @@ function renderSudoku(){
 }
 renderSudoku();
 
+// 검증 로직
 document.getElementById("verifyBtn").addEventListener("click",()=>{
   const inputs=grid.querySelectorAll("input"); let correct=true;
   inputs.forEach(inp=>{ const r=+inp.dataset.row, c=+inp.dataset.col; if(inp.value!=solution[r][c]) correct=false; });
@@ -186,17 +194,16 @@ document.getElementById("verifyBtn").addEventListener("click",()=>{
 // 이미지 확대
 const overlay=document.getElementById("overlay");
 const overlayImg=overlay.querySelector("img");
-const overlayText=document.getElementById("overlayText");
 const closeBtn=document.getElementById("closeOverlay");
 document.querySelectorAll("#imagesSection img").forEach(img=>{
   img.addEventListener("click", ()=>{
     overlayImg.src=img.src;
-    overlayText.textContent=(img.id==="img1")?(lang==="ko"?"검진 결과 1":"Check-up Result 1"):(lang==="ko"?"검진 결과 2":"Check-up Result 2");
+    overlayImg.alt=img.alt;
     overlay.style.display="flex";
   });
 });
 closeBtn.addEventListener("click",()=>overlay.style.display="none");
-overlay.addEventListener("click",e=>{ if(e.target===overlay) overlay.style.display="none";});
+overlay.addEventListener("click", e=>{ if(e.target===overlay) overlay.style.display="none";});
 </script>
 </body>
 </html>
